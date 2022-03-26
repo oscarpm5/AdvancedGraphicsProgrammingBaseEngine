@@ -16,73 +16,77 @@ typedef glm::ivec4 ivec4;
 
 struct Image
 {
-    void* pixels;
-    ivec2 size;
-    i32   nchannels;
-    i32   stride;
+	void* pixels;
+	ivec2 size;
+	i32   nchannels;
+	i32   stride;
 };
 
 struct Texture
 {
-    GLuint      handle;
-    std::string filepath;
+	GLuint      handle;
+	std::string filepath;
 };
 
 struct Program
 {
-    GLuint             handle;
-    std::string        filepath;
-    std::string        programName;
-    u64                lastWriteTimestamp; // What is this for?
+	GLuint             handle;
+	std::string        filepath;
+	std::string        programName;
+	u64                lastWriteTimestamp; // What is this for?
 };
 
 enum Mode
 {
-    Mode_TexturedQuad,
-    Mode_Count
+	Mode_TexturedQuad,
+	Mode_Count
 };
 
 struct App
 {
-    // Loop
-    f32  deltaTime;
-    bool isRunning;
+	// Loop
+	f32  deltaTime;
+	bool isRunning;
 
-    // Input
-    Input input;
+	// Input
+	Input input;
 
-    // Graphics
-    char gpuName[64];
-    char openGlVersion[64];
+	//information about opengl
+	OpenGLInfo glInfo;
+	bool showGlInfoWindow;
 
-    ivec2 displaySize;
+	// Graphics
+	char gpuName[64];
+	char openGlVersion[64];
 
-    std::vector<Texture>  textures;
-    std::vector<Program>  programs;
+	ivec2 displaySize;
 
-    // program indices
-    u32 texturedGeometryProgramIdx;
-    
-    // texture indices
-    u32 diceTexIdx;
-    u32 whiteTexIdx;
-    u32 blackTexIdx;
-    u32 normalTexIdx;
-    u32 magentaTexIdx;
+	std::vector<Texture>  textures;
+	std::vector<Program>  programs;
 
-    // Mode
-    Mode mode;
+	// program indices
+	u32 texturedGeometryProgramIdx;
 
-    // Embedded geometry (in-editor simple meshes such as
-    // a screen filling quad, a cube, a sphere...)
-    GLuint embeddedVertices;
-    GLuint embeddedElements;
+	// texture indices
+	u32 diceTexIdx;
+	u32 whiteTexIdx;
+	u32 blackTexIdx;
+	u32 normalTexIdx;
+	u32 magentaTexIdx;
 
-    // Location of the texture uniform in the textured quad shader
-    GLuint programUniformTexture;
+	// Mode
+	Mode mode;
 
-    // VAO object to link our screen filling quad with our textured quad shader
-    GLuint vao;
+	// Embedded geometry (in-editor simple meshes such as
+	// a screen filling quad, a cube, a sphere...)
+	GLuint embeddedVertices;
+	GLuint embeddedElements;
+
+	// Location of the texture uniform in the textured quad shader
+	GLuint programUniformTexture;
+
+	// VAO object to link our screen filling quad with our textured quad shader
+	GLuint vao;
 };
 
 void Init(App* app);
