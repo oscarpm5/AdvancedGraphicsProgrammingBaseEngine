@@ -201,6 +201,40 @@ void Init(App* app)
 	// - programs (and retrieve uniform indices)
 	// - textures
 
+	//Geometry
+	//VBO
+	glGenBuffers(1, &app->embeddedVertices);
+	glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//EBO
+	glGenBuffers(1, &app->embeddedElements);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	//VAO
+	glGenVertexArrays(1, &app->vao);
+	glBindVertexArray(app->vao);
+	glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);//embedd the VBO
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)0);//Location 0 of the shader this is vertex pos
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)12);//Location 0 of the shader this is uv coords
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);//embedd the EBO
+	glBindVertexArray(0);
+
+	//Program
+	app->texturedGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
+	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
+	app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
+
+	//Texture
+	app->diceTexIdx = LoadTexture2D(app, "dice.png");
+	app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
+	app->blackTexIdx = LoadTexture2D(app, "color_black.png");
+	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
+	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
+
 	app->mode = Mode_TexturedQuad;
 }
 
@@ -246,15 +280,38 @@ void Render(App* app)
 	{
 	case Mode_TexturedQuad:
 	{
-		// TODO: Draw your textured quad here!
+
+
 		// - clear the framebuffer
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		// - set the viewport
-		// - set the blending state
-		// - bind the texture into unit 0
+		glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
 		// - bind the program 
-		//   (...and make its texture sample from unit 0)
+		Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
+		glUseProgram(texturedGeometryProgram.handle);
 		// - bind the vao
+		glBindVertexArray(app->vao);
+
+		// - set the blending state
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		//   (...and make its texture sample from unit 0)
+		glUniform1i(app->programUniformTexture, 0);
+		glActiveTexture(GL_TEXTURE0);
+		// - bind the texture into unit 0
+		GLuint textureHandle = app->textures[app->diceTexIdx].handle;
+		glBindTexture(GL_TEXTURE_2D, textureHandle);
+
 		// - glDrawElements() !!!
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+
+		//unbind
+		glBindVertexArray(0);
+		glUseProgram(0);
 	}
 	break;
 
