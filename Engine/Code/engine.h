@@ -5,14 +5,9 @@
 #pragma once
 
 #include "platform.h"
+#include "assimp_model_loading.h"
 #include <glad/glad.h>
 
-typedef glm::vec2  vec2;
-typedef glm::vec3  vec3;
-typedef glm::vec4  vec4;
-typedef glm::ivec2 ivec2;
-typedef glm::ivec3 ivec3;
-typedef glm::ivec4 ivec4;
 
 struct Image
 {
@@ -79,6 +74,9 @@ struct App
 	ivec2 displaySize;
 
 	std::vector<Texture>  textures;
+	std::vector<Material>  materials;
+	std::vector<Mesh>  meshes;
+	std::vector<Model>  models;
 	std::vector<Program>  programs;
 
 	// program indices
@@ -106,6 +104,18 @@ struct App
 	GLuint vao;
 };
 
+GLuint CreateProgramFromSource(String programSource, const char* shaderName);
+
+u32 LoadProgram(App* app, const char* filepath, const char* programName);
+
+Image LoadImage(const char* filename);
+
+void FreeImage(Image image);
+
+GLuint CreateTexture2DFromImage(Image image);
+
+u32 LoadTexture2D(App* app, const char* filepath);
+
 void Init(App* app);
 
 void Gui(App* app);
@@ -115,3 +125,6 @@ void Update(App* app);
 void Render(App* app);
 
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
+
+
+
