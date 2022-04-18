@@ -245,7 +245,9 @@ void Init(App* app)
 	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
-	app->mode = Mode_TexturedQuad;
+	app->mode = Mode_Count;
+
+	app->model= LoadModel(app, "Patrick/Patrick.obj");
 }
 
 void Gui(App* app)
@@ -362,8 +364,6 @@ void Render(App* app)
 
 			Submesh& submesh = mesh.submeshes[i];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-
-
 		}
 
 		glBindVertexArray(0);
@@ -449,9 +449,9 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 			{
 				if (program.vertexInputLayout.attributes[i].location == submesh.vertexBufferLayout.attributes[j].location)
 				{
-					const u32 index = submesh.vertexBufferLayout.attributes[i].location;
-					const u32 ncomp = submesh.vertexBufferLayout.attributes[i].componentCount;
-					const u32 offset = submesh.vertexBufferLayout.attributes[i].offset + submesh.vertexOffset;//Attribute offset + vertex offset
+					const u32 index = submesh.vertexBufferLayout.attributes[j].location;
+					const u32 ncomp = submesh.vertexBufferLayout.attributes[j].componentCount;
+					const u32 offset = submesh.vertexBufferLayout.attributes[j].offset + submesh.vertexOffset;//Attribute offset + vertex offset
 					const u32 stride = submesh.vertexBufferLayout.stride;
 					glVertexAttribPointer(index, ncomp, GL_FLOAT, GL_FALSE, stride, (void*)(u64)offset);
 					glEnableVertexAttribArray(index);
