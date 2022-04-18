@@ -103,8 +103,14 @@ struct App
 	// Location of the texture uniform in the textured quad shader
 	GLuint programUniformTexture;
 
+	// Location of the texture uniform in the textured mesh shader
+	GLuint texturedMeshProgram_uTexture;
+
 	// VAO object to link our screen filling quad with our textured quad shader
 	GLuint vao;
+
+	//Patrick Model
+	GLuint model;
 };
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName);

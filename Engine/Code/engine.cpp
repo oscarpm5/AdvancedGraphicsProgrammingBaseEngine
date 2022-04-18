@@ -180,7 +180,7 @@ u32 LoadTexture2D(App* app, const char* filepath)
 
 void Init(App* app)
 {
-	
+
 	if (GLVersion.major > 4 || (GLVersion.major = 4 && GLVersion.minor >= 3))
 	{
 		glDebugMessageCallback(OnGlError, app);
@@ -237,7 +237,7 @@ void Init(App* app)
 	Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 	texturedMeshProgram.vertexInputLayout.attributes.push_back({ 0,3 });//Position
 	texturedMeshProgram.vertexInputLayout.attributes.push_back({ 2,2 });//texCoord
-
+	app->texturedMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 	//Texture
 	app->diceTexIdx = LoadTexture2D(app, "dice.png");
 	app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
@@ -245,7 +245,7 @@ void Init(App* app)
 	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
-	app->mode = Mode_Count;
+	app->mode = Mode_TexturedQuad;
 }
 
 void Gui(App* app)
@@ -339,6 +339,7 @@ void Render(App* app)
 		glBindVertexArray(0);
 		glUseProgram(0);
 	}
+	break;
 	case Mode_Count:
 	{
 		Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
@@ -362,9 +363,10 @@ void Render(App* app)
 			Submesh& submesh = mesh.submeshes[i];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 
-			glBindVertexArray(0);
+
 		}
 
+		glBindVertexArray(0);
 		glUseProgram(0);
 	}
 	break;
