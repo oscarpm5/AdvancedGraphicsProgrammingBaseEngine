@@ -247,7 +247,7 @@ void Init(App* app)
 
 	app->mode = Mode_Count;
 
-	app->model= LoadModel(app, "Patrick/Patrick.obj");
+	app->model = LoadModel(app, "Patrick/Patrick.obj");
 }
 
 void Gui(App* app)
@@ -313,6 +313,8 @@ void Render(App* app)
 	// - set the viewport
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
+
+
 	switch (app->mode)
 	{
 	case Mode_TexturedQuad:
@@ -344,6 +346,9 @@ void Render(App* app)
 	break;
 	case Mode_Count:
 	{
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
+
 		Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 		glUseProgram(texturedMeshProgram.handle);
 
@@ -472,3 +477,44 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 	return vaoHandle;
 }
 
+void CreateSphere(App* app)
+{
+//#define H 32 
+//#define V 16
+//	static const float pi = 3.1416f;
+//	struct Vertex { vec3 pos; vec3 norm; };
+//	Vertex sphere[H][V + 1];
+//	for (int h = 0; h < H; ++h) {
+//		for (int v = 0; v < V + 1; ++v)
+//		{
+//			float nh = float(h) / H;
+//			float nv = float(v) / V - 0.5f;
+//			float angleh = 2 * pi * nh;
+//			float anglev = -pi * nv;
+//			sphere[h][v].pos.x =sinf(angleh) * cosf(anglev); 
+//			sphere[h][v].pos.y = -sinf(anglev);
+//			sphere[h][v].pos.z = cosf(angleh) * cosf(anglev); 
+//			sphere[h][v].norm = sphere[h][v].pos;
+//		}
+//	}
+//	unsigned int sphereIndices[H][V][6];
+//	for (unsigned int h = 0; h < H; ++h) {
+//		for (unsigned int v = 0; v < V; ++v) {
+//			sphereIndices[h][v][0] = (h + 0) * (V + 1) + v;
+//			sphereIndices[h][v][1] = ((h + 1) % H) * (V + 1) + v;
+//			sphereIndices[h][v][2] = ((h + 1) % H) * (V + 1) + v + 1;
+//			sphereIndices[h][v][3] = (h + 0) * (V + 1) + v; 
+//			sphereIndices[h][v][4] = ((h + 1) % H) * (V + 1) + v + 1;
+//			sphereIndices[h][v][5] = (h + 0) * (V + 1) + v + 1;
+//		}
+//	}
+//
+//	VertexFormat vertexFormat;
+//	vertexFormat.setVertexAttribute(0, 0, 3);
+//	vertexFormat.setVertexAttribute(1, sizeof(vec3), 3);
+//	Mesh* mesh = createMesh();
+//	mesh->name = "Sphere";
+//	mesh->addSubMesh(vertexFormat, sphere, sizeof(sphere), &sphereIndices[0][0][0], H * V * 6);
+//	this->sphere = mesh;
+
+}
