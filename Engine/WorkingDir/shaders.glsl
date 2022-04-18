@@ -7,7 +7,11 @@
 
 // TODO: Write your vertex shader here
 layout(location=0) in vec3 aPosition;
+//layout(location=1) in vec3 aNormal;
 layout(location=2) in vec2 aTexCoord;
+//layout(location=3) in vec3 aTangent;
+//layout(location=4) in vec3 aBitangent;
+
 
 out vec2 vTexCoord;
 
@@ -15,9 +19,14 @@ void main()
 {
 	vTexCoord = aTexCoord;
 
+	//We will usually not define the clipping scale manually...
+	//it is usually computed by the projection matrix. Because
+	//we are not passing uiform transforms yet, we increase
+	//the clipping scale so that patrick fits the screen
 	float clippingScale=5.0;
 
 	gl_Position = vec4(aPosition,clippingScale);
+	//Patrick looks away from the camera by default so we flip it here.
 	gl_Position.z=-gl_Position.z;
 }
 
