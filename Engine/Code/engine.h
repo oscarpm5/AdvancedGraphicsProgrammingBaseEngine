@@ -9,6 +9,13 @@
 #include <glad/glad.h>
 
 
+struct Vertex
+{
+	vec3 pos;
+	vec3 norm;
+	vec2 uv;
+};
+
 
 struct VertexBufferAttribute
 {
@@ -57,13 +64,6 @@ struct Submesh
 	std::vector<Vao> vaos;
 };
 
-class VertexFormat
-{
-public:
-	std::vector<vec3> vertexAttributes;
-	void SetVertexAttribute(int location, size_t offset, size_t stride);
-};
-
 class Mesh
 {
 public:
@@ -71,7 +71,8 @@ public:
 	GLuint vertexBufferHandle;
 	GLuint indexBufferHandle;
 
-	void AddSubmesh(VertexFormat format,Vertex* vertexData,size_t vertexDataSize,unsigned int * indices,int indicesize);
+	void AddSubmesh(std::vector<VertexBufferAttribute> format, std::vector<float> vertexData, std::vector<u32> indicesData);
+	void GenerateMeshData(App* app);
 };
 
 struct Material
@@ -124,12 +125,6 @@ struct VertexV3V2
 {
 	glm::vec3 pos;
 	glm::vec2 uv;
-};
-
-struct Vertex 
-{ 
-	vec3 pos; 
-	vec3 norm; 
 };
 
 const VertexV3V2 vertices[] = {
@@ -227,11 +222,12 @@ void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei l
 
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
+void CreateSphere(App* app);
 
-Mesh* CreateMesh(App * app);
+
+Mesh* CreateMesh(App * app, u32* index = nullptr);
 
 Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess, std::vector<u32> indicesToProess);
 
 void AddSubmeshToMesh(Submesh* submesh);
 
-void GenerateMeshData(App* app, u32 meshIndex);

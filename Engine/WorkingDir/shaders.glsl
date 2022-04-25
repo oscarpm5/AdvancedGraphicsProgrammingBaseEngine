@@ -48,17 +48,19 @@ void main()
 
 // TODO: Write your vertex shader here
 layout(location=0) in vec3 aPosition;
-//layout(location=1) in vec3 aNormal;
+layout(location=1) in vec3 aNormal;
 layout(location=2) in vec2 aTexCoord;
 //layout(location=3) in vec3 aTangent;
 //layout(location=4) in vec3 aBitangent;
 
 
 out vec2 vTexCoord;
+out vec3 vNormal;
 
 void main()
 {
 	vTexCoord = aTexCoord;
+	vNormal = aNormal;
 
 	//We will usually not define the clipping scale manually...
 	//it is usually computed by the projection matrix. Because
@@ -75,12 +77,15 @@ void main()
 
 // TODO: Write your fragment shader here
 in vec2 vTexCoord;
+in vec3 vNormal;
 uniform sampler2D uTexture;
 layout(location=0) out vec4 oColor;
 
 void main()
 {
 	oColor = texture(uTexture,vTexCoord);
+	float luminance = dot(normalize(vNormal),normalize(vec3(1.0,1.0,1.0)));
+	oColor =  vec4(oColor.xyz * vec3(luminance,luminance,luminance),1.0);
 }
 
 
