@@ -15,76 +15,15 @@ struct aiMesh;
 struct aiMaterial;
 struct aiNode;
 
-struct VertexBufferAttribute
-{
-	u8 location;
-	u8 componentCount;
-	u8 offset;
-};
-
-struct VertexBufferLayout
-{
-	std::vector<VertexBufferAttribute> attributes;
-	u8 stride;
-};
-
-struct VertexShaderAttribute
-{
-	u8 location;
-	u8 componentCount;
-};
-
-struct VertexShaderLayout
-{
-	std::vector<VertexShaderAttribute> attributes;
-};
-
-struct Vao
-{
-	GLuint handle;
-	GLuint programHandle;
-};
-
-
-struct Model
-{
-	u32 meshIdx;
-	std::vector<u32> materialIdx;
-};
-
-struct Submesh
-{
-	VertexBufferLayout vertexBufferLayout;
-	std::vector<float> vertices;
-	std::vector<u32> indices;
-	u32 vertexOffset;
-	u32 indexOffset;
-	std::vector<Vao> vaos;
-};
-
-struct Mesh
-{
-	std::vector<Submesh> submeshes;
-	GLuint vertexBufferHandle;
-	GLuint indexBufferHandle;
-};
-
-struct Material
-{
-	std::string name;
-	vec3 albedo;
-	vec3 emissive;
-	f32 smoothness;
-	u32 albedoTextureIdx;
-	u32 emissiveTextureIdx;
-	u32 specularTextureIdx;
-	u32 normalsTextureIdx;
-	u32 bumpTextureIdx;
-
-};
-
-
-
+struct VertexBufferAttribute;
+struct VertexBufferLayout;
+struct VertexShaderAttribute;
+struct VertexShaderLayout;
+struct Vao;
+struct Model;
+struct Submesh;
+struct Mesh;
+struct Material;
 
 void ProcessAssimpMesh(const aiScene* scene, aiMesh* mesh, Mesh* myMesh, u32 baseMeshMaterialIndex, std::vector<u32>& submeshMaterialIndices);
 
@@ -94,12 +33,4 @@ void ProcessAssimpNode(const aiScene* scene, aiNode* node, Mesh* myMesh, u32 bas
 
 u32 LoadModel(App* app, const char* filename);
 
-u32 CreateMesh(App* app);
-
-
-Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess,std::vector<u32> indicesToProess);
-
-void AddSubmeshToMesh(Submesh* submesh);
-
-void GenerateMeshData(App* app, u32 meshIndex);
 

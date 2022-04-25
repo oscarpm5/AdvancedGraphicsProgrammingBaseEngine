@@ -5,6 +5,11 @@
 // graphics related GUI options, and so on.
 //
 
+
+//Vertices = 0
+//Normals = 1
+//TexCoords = 2
+
 #include "engine.h"
 #include <imgui.h>
 #include <stb_image.h>
@@ -561,11 +566,195 @@ void CreateSphere(App* app)
 	}
 
 	VertexFormat vertexFormat;
-	vertexFormat.setVertexAttribute(0, 0, 3);
-	vertexFormat.setVertexAttribute(1, sizeof(vec3), 3);
-	Mesh* mesh = &app->meshes[CreateMesh(app)];
-	mesh->name = "Sphere";
-	mesh->addSubMesh(vertexFormat, sphere, sizeof(sphere), &sphereIndices[0][0][0], H * V * 6);
-	this->sphere = mesh;
+	vertexFormat.SetVertexAttribute(0, 0, 3);
+	vertexFormat.SetVertexAttribute(1, sizeof(vec3), 3);
+	Mesh* mesh = CreateMesh(app, &app->sphereMesh);
+	//mesh->name = "Sphere";
+	mesh->AddSubmesh(vertexFormat, &sphere[0][0], sizeof(sphere), &sphereIndices[0][0][0], H * V * 6);
+}
+
+
+Mesh* CreateMesh(App* app, u32* index=nullptr)
+{
+	app->meshes.push_back(Mesh{});
+	Mesh& mesh = app->meshes.back();
+
+	if (index != nullptr)
+		*index = ((u32)app->meshes.size() - 1u);
+}
+
+Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess, std::vector<u32> indicesToProess)
+{
+	//std::vector<float> vertices;
+	//std::vector<u32> indices;
+
+	//bool hasTexCoords = false;
+	//bool hasTangentSpace = false;
+
+	//// process vertices
+	//for (unsigned int i = 0; i < verticesToProcess.size(); i++)
+	//{
+	//	vertices.push_back(mesh->mVertices[i].x);
+	//	vertices.push_back(mesh->mVertices[i].y);
+	//	vertices.push_back(mesh->mVertices[i].z);
+	//	vertices.push_back(mesh->mNormals[i].x);
+	//	vertices.push_back(mesh->mNormals[i].y);
+	//	vertices.push_back(mesh->mNormals[i].z);
+
+	//	if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
+	//	{
+	//		hasTexCoords = true;
+	//		vertices.push_back(mesh->mTextureCoords[0][i].x);
+	//		vertices.push_back(mesh->mTextureCoords[0][i].y);
+	//	}
+
+	//	if (mesh->mTangents != nullptr && mesh->mBitangents)
+	//	{
+	//		hasTangentSpace = true;
+	//		vertices.push_back(mesh->mTangents[i].x);
+	//		vertices.push_back(mesh->mTangents[i].y);
+	//		vertices.push_back(mesh->mTangents[i].z);
+
+	//		// For some reason ASSIMP gives me the bitangents flipped.
+	//		// Maybe it's my fault, but when I generate my own geometry
+	//		// in other files (see the generation of standard assets)
+	//		// and all the bitangents have the orientation I expect,
+	//		// everything works ok.
+	//		// I think that (even if the documentation says the opposite)
+	//		// it returns a left-handed tangent space matrix.
+	//		// SOLUTION: I invert the components of the bitangent here.
+	//		vertices.push_back(-mesh->mBitangents[i].x);
+	//		vertices.push_back(-mesh->mBitangents[i].y);
+	//		vertices.push_back(-mesh->mBitangents[i].z);
+	//	}
+	//}
+
+	//// process indices
+	//for (unsigned int i = 0; i < mesh->mNumFaces; i++)
+	//{
+	//	aiFace face = mesh->mFaces[i];
+	//	for (unsigned int j = 0; j < face.mNumIndices; j++)
+	//	{
+	//		indices.push_back(face.mIndices[j]);
+	//	}
+	//}
+
+	//// store the proper (previously proceessed) material for this mesh
+	//submeshMaterialIndices.push_back(baseMeshMaterialIndex + mesh->mMaterialIndex);
+
+	//// create the vertex format
+	//VertexBufferLayout vertexBufferLayout = {};
+	//vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 0, 3, 0 });
+	//vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 1, 3, 3 * sizeof(float) });
+	//vertexBufferLayout.stride = 6 * sizeof(float);
+	//if (hasTexCoords)
+	//{
+	//	vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 2, 2, vertexBufferLayout.stride });
+	//	vertexBufferLayout.stride += 2 * sizeof(float);
+	//}
+	//if (hasTangentSpace)
+	//{
+	//	vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 3, 3, vertexBufferLayout.stride });
+	//	vertexBufferLayout.stride += 3 * sizeof(float);
+
+	//	vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 4, 3, vertexBufferLayout.stride });
+	//	vertexBufferLayout.stride += 3 * sizeof(float);
+	//}
+
+	//// add the submesh into the mesh
+	//Submesh submesh = {};
+	//submesh.vertexBufferLayout = vertexBufferLayout;
+	//submesh.vertices.swap(vertices);
+	//submesh.indices.swap(indices);
+	//myMesh->submeshes.push_back(submesh);
+}
+
+//Once we have the mesh with its submeshes, we can construct its data
+void GenerateMeshData(App* app, u32 meshIndex)
+{
+	Mesh& mesh = app->meshes[meshIndex];
+
+	//first we delete buffers if they have been created before
+	glDeleteBuffers(1, &mesh.vertexBufferHandle);
+	glDeleteBuffers(1, &mesh.indexBufferHandle);
+
+
+	u32 vertexBufferSize = 0;
+	u32 indexBufferSize = 0;
+
+	for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+	{
+		vertexBufferSize += mesh.submeshes[i].vertices.size() * sizeof(float);
+		indexBufferSize += mesh.submeshes[i].indices.size() * sizeof(u32);
+	}
+
+	glGenBuffers(1, &mesh.vertexBufferHandle);
+	glBindBuffer(GL_ARRAY_BUFFER, mesh.vertexBufferHandle);
+	glBufferData(GL_ARRAY_BUFFER, vertexBufferSize, NULL, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &mesh.indexBufferHandle);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.indexBufferHandle);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferSize, NULL, GL_STATIC_DRAW);
+
+	u32 indicesOffset = 0;
+	u32 verticesOffset = 0;
+
+	for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+	{
+		const void* verticesData = mesh.submeshes[i].vertices.data();
+		const u32   verticesSize = mesh.submeshes[i].vertices.size() * sizeof(float);
+		glBufferSubData(GL_ARRAY_BUFFER, verticesOffset, verticesSize, verticesData);
+		mesh.submeshes[i].vertexOffset = verticesOffset;
+		verticesOffset += verticesSize;
+
+		const void* indicesData = mesh.submeshes[i].indices.data();
+		const u32   indicesSize = mesh.submeshes[i].indices.size() * sizeof(u32);
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, indicesOffset, indicesSize, indicesData);
+		mesh.submeshes[i].indexOffset = indicesOffset;
+		indicesOffset += indicesSize;
+	}
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+}
+
+void Mesh::AddSubmesh(VertexFormat format, Vertex* vertexData, size_t vertexDataSize, unsigned int* indices, int indicesize)
+{
+	int sizeOfVsertexArray =  vertexDataSize / sizeof(Vertex);
+
+
+	std::vector<float> vertices;
+	std::vector<u32> indices;
+
+	// store the proper (previously proceessed) material for this mesh
+	submeshMaterialIndices.push_back(baseMeshMaterialIndex + mesh->mMaterialIndex);
+
+	// create the vertex format
+	VertexBufferLayout vertexBufferLayout = {};
+	vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 0, 3, 0 });
+	vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 1, 3, 3 * sizeof(float) });
+	vertexBufferLayout.stride = 6 * sizeof(float);
+	if (hasTexCoords)
+	{
+		vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 2, 2, vertexBufferLayout.stride });
+		vertexBufferLayout.stride += 2 * sizeof(float);
+	}
+	if (hasTangentSpace)
+	{
+		vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 3, 3, vertexBufferLayout.stride });
+		vertexBufferLayout.stride += 3 * sizeof(float);
+
+		vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 4, 3, vertexBufferLayout.stride });
+		vertexBufferLayout.stride += 3 * sizeof(float);
+	}
+
+	// add the submesh into the mesh
+	Submesh submesh = {};
+	submesh.vertexBufferLayout = vertexBufferLayout;
+	submesh.vertices.swap(vertices);
+	submesh.indices.swap(indices);
+	myMesh->submeshes.push_back(submesh);
+}
 
 }

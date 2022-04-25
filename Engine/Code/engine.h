@@ -9,6 +9,88 @@
 #include <glad/glad.h>
 
 
+
+struct VertexBufferAttribute
+{
+	u8 location;
+	u8 componentCount;
+	u8 offset;
+};
+
+struct VertexBufferLayout
+{
+	std::vector<VertexBufferAttribute> attributes;
+	u8 stride;
+};
+
+struct VertexShaderAttribute
+{
+	u8 location;
+	u8 componentCount;
+};
+
+struct VertexShaderLayout
+{
+	std::vector<VertexShaderAttribute> attributes;
+};
+
+struct Vao
+{
+	GLuint handle;
+	GLuint programHandle;
+};
+
+
+struct Model
+{
+	u32 meshIdx;
+	std::vector<u32> materialIdx;
+};
+
+struct Submesh
+{
+	VertexBufferLayout vertexBufferLayout;
+	std::vector<float> vertices;
+	std::vector<u32> indices;
+	u32 vertexOffset;
+	u32 indexOffset;
+	std::vector<Vao> vaos;
+};
+
+class VertexFormat
+{
+public:
+	std::vector<vec3> vertexAttributes;
+	void SetVertexAttribute(int location, size_t offset, size_t stride);
+};
+
+class Mesh
+{
+public:
+	std::vector<Submesh> submeshes;
+	GLuint vertexBufferHandle;
+	GLuint indexBufferHandle;
+
+	void AddSubmesh(VertexFormat format,Vertex* vertexData,size_t vertexDataSize,unsigned int * indices,int indicesize);
+};
+
+struct Material
+{
+	std::string name;
+	vec3 albedo;
+	vec3 emissive;
+	f32 smoothness;
+	u32 albedoTextureIdx;
+	u32 emissiveTextureIdx;
+	u32 specularTextureIdx;
+	u32 normalsTextureIdx;
+	u32 bumpTextureIdx;
+
+};
+
+
+
+
 struct Image
 {
 	void* pixels;
@@ -117,6 +199,8 @@ struct App
 
 	//Patrick Model
 	GLuint model;
+
+	GLuint sphereMesh;
 };
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName);
@@ -144,4 +228,10 @@ void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei l
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
 
+Mesh* CreateMesh(App * app);
 
+Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess, std::vector<u32> indicesToProess);
+
+void AddSubmeshToMesh(Submesh* submesh);
+
+void GenerateMeshData(App* app, u32 meshIndex);
