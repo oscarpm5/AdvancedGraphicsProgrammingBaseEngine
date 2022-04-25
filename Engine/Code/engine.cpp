@@ -115,7 +115,7 @@ u32 LoadProgram(App* app, const char* filepath, const char* programName)
 		GLint attribLocation = glGetAttribLocation(program.handle, attribName);
 
 		VertexShaderAttribute newInputAttrib;
-		newInputAttrib.componentCount = attribSize;//TODO this line is wrong for patrick it was {0,3}, {2,2} meaning that this should be 3 or 2 in some cases but it is always 1
+		newInputAttrib.componentCount = attribSize;//TODO this line is wrong for patrick it was {0,3}, {2,2} meaning that this should be 2 or DO A SWITCH with glfloat, glfloat2...
 		newInputAttrib.location = attribLocation;
 
 		program.vertexInputLayout.attributes.push_back(newInputAttrib);
