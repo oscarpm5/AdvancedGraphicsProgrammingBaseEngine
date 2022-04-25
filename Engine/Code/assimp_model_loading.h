@@ -94,3 +94,12 @@ void ProcessAssimpNode(const aiScene* scene, aiNode* node, Mesh* myMesh, u32 bas
 
 u32 LoadModel(App* app, const char* filename);
 
+u32 CreateMesh(App* app);
+
+
+Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess,std::vector<u32> indicesToProess);
+
+void AddSubmeshToMesh(Submesh* submesh);
+
+void GenerateMeshData(App* app, u32 meshIndex);
+

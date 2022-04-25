@@ -44,6 +44,12 @@ struct VertexV3V2
 	glm::vec2 uv;
 };
 
+struct Vertex 
+{ 
+	vec3 pos; 
+	vec3 norm; 
+};
+
 const VertexV3V2 vertices[] = {
 	{glm::vec3(-0.5,-0.5,0.0),glm::vec2(0.0,0.0)}, //Bottom-left
 	{glm::vec3(0.5,-0.5,0.0),glm::vec2(1.0,0.0)}, //Bottom-right
