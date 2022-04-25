@@ -115,7 +115,36 @@ u32 LoadProgram(App* app, const char* filepath, const char* programName)
 		GLint attribLocation = glGetAttribLocation(program.handle, attribName);
 
 		VertexShaderAttribute newInputAttrib;
-		newInputAttrib.componentCount = attribSize;//TODO this line is wrong for patrick it was {0,3}, {2,2} meaning that this should be 2 or DO A SWITCH with glfloat, glfloat2...
+
+		u8 attribRealSize = 0;
+
+		switch (attribType)
+		{
+		case GL_FLOAT:
+		{
+			attribRealSize = 1;
+		}
+		break;
+		case GL_FLOAT_VEC2:
+		{
+			attribRealSize = 2;
+		}
+		break;
+		case GL_FLOAT_VEC3:
+		{
+			attribRealSize = 3;
+		}
+		break;
+		case GL_FLOAT_VEC4:
+		{
+			attribRealSize = 4;
+		}
+		break;
+		}
+
+		assert(attribRealSize != 0);
+
+		newInputAttrib.componentCount = attribSize * attribRealSize;
 		newInputAttrib.location = attribLocation;
 
 		program.vertexInputLayout.attributes.push_back(newInputAttrib);
@@ -501,42 +530,42 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 
 void CreateSphere(App* app)
 {
-//#define H 32 
-//#define V 16
-//	static const float pi = 3.1416f;
-//	struct Vertex { vec3 pos; vec3 norm; };
-//	Vertex sphere[H][V + 1];
-//	for (int h = 0; h < H; ++h) {
-//		for (int v = 0; v < V + 1; ++v)
-//		{
-//			float nh = float(h) / H;
-//			float nv = float(v) / V - 0.5f;
-//			float angleh = 2 * pi * nh;
-//			float anglev = -pi * nv;
-//			sphere[h][v].pos.x =sinf(angleh) * cosf(anglev); 
-//			sphere[h][v].pos.y = -sinf(anglev);
-//			sphere[h][v].pos.z = cosf(angleh) * cosf(anglev); 
-//			sphere[h][v].norm = sphere[h][v].pos;
-//		}
-//	}
-//	unsigned int sphereIndices[H][V][6];
-//	for (unsigned int h = 0; h < H; ++h) {
-//		for (unsigned int v = 0; v < V; ++v) {
-//			sphereIndices[h][v][0] = (h + 0) * (V + 1) + v;
-//			sphereIndices[h][v][1] = ((h + 1) % H) * (V + 1) + v;
-//			sphereIndices[h][v][2] = ((h + 1) % H) * (V + 1) + v + 1;
-//			sphereIndices[h][v][3] = (h + 0) * (V + 1) + v; 
-//			sphereIndices[h][v][4] = ((h + 1) % H) * (V + 1) + v + 1;
-//			sphereIndices[h][v][5] = (h + 0) * (V + 1) + v + 1;
-//		}
-//	}
-//
-//	VertexFormat vertexFormat;
-//	vertexFormat.setVertexAttribute(0, 0, 3);
-//	vertexFormat.setVertexAttribute(1, sizeof(vec3), 3);
-//	Mesh* mesh = createMesh();
-//	mesh->name = "Sphere";
-//	mesh->addSubMesh(vertexFormat, sphere, sizeof(sphere), &sphereIndices[0][0][0], H * V * 6);
-//	this->sphere = mesh;
+	//#define H 32 
+	//#define V 16
+	//	static const float pi = 3.1416f;
+	//	struct Vertex { vec3 pos; vec3 norm; };
+	//	Vertex sphere[H][V + 1];
+	//	for (int h = 0; h < H; ++h) {
+	//		for (int v = 0; v < V + 1; ++v)
+	//		{
+	//			float nh = float(h) / H;
+	//			float nv = float(v) / V - 0.5f;
+	//			float angleh = 2 * pi * nh;
+	//			float anglev = -pi * nv;
+	//			sphere[h][v].pos.x =sinf(angleh) * cosf(anglev); 
+	//			sphere[h][v].pos.y = -sinf(anglev);
+	//			sphere[h][v].pos.z = cosf(angleh) * cosf(anglev); 
+	//			sphere[h][v].norm = sphere[h][v].pos;
+	//		}
+	//	}
+	//	unsigned int sphereIndices[H][V][6];
+	//	for (unsigned int h = 0; h < H; ++h) {
+	//		for (unsigned int v = 0; v < V; ++v) {
+	//			sphereIndices[h][v][0] = (h + 0) * (V + 1) + v;
+	//			sphereIndices[h][v][1] = ((h + 1) % H) * (V + 1) + v;
+	//			sphereIndices[h][v][2] = ((h + 1) % H) * (V + 1) + v + 1;
+	//			sphereIndices[h][v][3] = (h + 0) * (V + 1) + v; 
+	//			sphereIndices[h][v][4] = ((h + 1) % H) * (V + 1) + v + 1;
+	//			sphereIndices[h][v][5] = (h + 0) * (V + 1) + v + 1;
+	//		}
+	//	}
+	//
+	//	VertexFormat vertexFormat;
+	//	vertexFormat.setVertexAttribute(0, 0, 3);
+	//	vertexFormat.setVertexAttribute(1, sizeof(vec3), 3);
+	//	Mesh* mesh = createMesh();
+	//	mesh->name = "Sphere";
+	//	mesh->addSubMesh(vertexFormat, sphere, sizeof(sphere), &sphereIndices[0][0][0], H * V * 6);
+	//	this->sphere = mesh;
 
 }
