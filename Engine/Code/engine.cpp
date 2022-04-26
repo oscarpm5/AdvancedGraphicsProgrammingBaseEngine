@@ -265,29 +265,6 @@ void Init(App* app)
 	// - textures
 
 
-
-	//Geometry
-	//VBO
-	glGenBuffers(1, &app->embeddedVertices);
-	glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	//EBO
-	glGenBuffers(1, &app->embeddedElements);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	//VAO
-	glGenVertexArrays(1, &app->vao);
-	glBindVertexArray(app->vao);
-	glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);//embedd the VBO
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)0);//Location 0 of the shader this is vertex pos
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexV3V2), (void*)12);//Location 0 of the shader this is uv coords
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);//embedd the EBO
-	glBindVertexArray(0);
-
 	//Program
 	app->texturedGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
 	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];

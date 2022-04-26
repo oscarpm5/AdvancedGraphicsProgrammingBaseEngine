@@ -180,8 +180,9 @@ struct App
 
 	// Embedded geometry (in-editor simple meshes such as
 	// a screen filling quad, a cube, a sphere...)
-	GLuint embeddedVertices;
-	GLuint embeddedElements;
+	GLuint screenQuad; //Mesh
+	GLuint sphereMesh; //Mesh
+
 
 	// Location of the texture uniform in the textured quad shader
 	GLuint programUniformTexture;
@@ -189,15 +190,11 @@ struct App
 	// Location of the texture uniform in the textured mesh shader
 	GLuint texturedMeshProgram_uTexture;
 
-	// VAO object to link our screen filling quad with our textured quad shader
-	GLuint vao;
 
 	//Patrick Model
 	GLuint model;
 
-	GLuint sphereMesh;
 
-	GLuint screenQuad;
 };
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName);
