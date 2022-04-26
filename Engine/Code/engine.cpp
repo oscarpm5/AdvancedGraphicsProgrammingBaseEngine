@@ -264,6 +264,8 @@ void Init(App* app)
 	// - programs (and retrieve uniform indices)
 	// - textures
 
+
+
 	//Geometry
 	//VBO
 	glGenBuffers(1, &app->embeddedVertices);
@@ -301,13 +303,13 @@ void Init(App* app)
 	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
-	app->mode = Mode_Count;
+	app->mode = Mode_TexturedQuad;
 
 	app->model = LoadModel(app, "Patrick/Patrick.obj");
 
 
 	CreateSphere(app);
-
+	CreateQuad(app);
 }
 
 void Gui(App* app)
@@ -379,27 +381,52 @@ void Render(App* app)
 	{
 	case Mode_TexturedQuad:
 	{
-		// - bind the program 
-		Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-		glUseProgram(texturedGeometryProgram.handle);
-		// - bind the vao
-		glBindVertexArray(app->vao);
+		//// - bind the program 
+		//Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
+		//glUseProgram(texturedGeometryProgram.handle);
+		//// - bind the vao
+		//glBindVertexArray(app->vao);
 
-		// - set the blending state
+		//// - set the blending state
+		//glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		////   (...and make its texture sample from unit 0)
+		//glUniform1i(app->programUniformTexture, 0);
+		//glActiveTexture(GL_TEXTURE0);
+		//// - bind the texture into unit 0
+		//GLuint textureHandle = app->textures[app->diceTexIdx].handle;
+		//glBindTexture(GL_TEXTURE_2D, textureHandle);
+
+		//// - glDrawElements() !!!
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+
+		////unbind
+		//glBindVertexArray(0);
+		//glUseProgram(0);
+
+		glEnable(GL_CULL_FACE);
+		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		//   (...and make its texture sample from unit 0)
-		glUniform1i(app->programUniformTexture, 0);
-		glActiveTexture(GL_TEXTURE0);
-		// - bind the texture into unit 0
-		GLuint textureHandle = app->textures[app->diceTexIdx].handle;
-		glBindTexture(GL_TEXTURE_2D, textureHandle);
+		Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
+		glUseProgram(texturedGeometryProgram.handle);
 
-		// - glDrawElements() !!!
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+		Mesh& mesh = app->meshes[app->screenQuad];
 
-		//unbind
+		for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+		{
+			GLuint vao = FindVAO(mesh, i, texturedGeometryProgram);
+			glBindVertexArray(vao);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, app->textures[app->diceTexIdx].handle);
+			glUniform1i(app->programUniformTexture, 0);
+
+			Submesh& submesh = mesh.submeshes[i];
+			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+		}
 		glBindVertexArray(0);
 		glUseProgram(0);
 	}
@@ -553,6 +580,52 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 	submesh.vaos.push_back(vao);
 
 	return vaoHandle;
+}
+
+void CreateQuad(App* app)
+{
+	std::vector<float> quadVertexVec;
+	std::vector<u32> quadIndicesVec;
+	
+	const VertexV3V2 vertices[] = {
+		{glm::vec3(-1,-1,0.0),glm::vec2(0.0,0.0)}, //Bottom-left
+		{glm::vec3(1,-1,0.0),glm::vec2(1.0,0.0)}, //Bottom-right
+		{glm::vec3(1, 1,0.0),glm::vec2(1.0,1.0)},//Top-right
+		{glm::vec3(-1, 1,0.0),glm::vec2(0.0,1.0)}//Top-left
+	};
+
+	int verticesSize = sizeof(vertices) / sizeof(VertexV3V2);
+	for (int i = 0; i < verticesSize; ++i)
+	{
+		quadVertexVec.push_back(vertices[i].pos.x);
+		quadVertexVec.push_back(vertices[i].pos.y);
+		quadVertexVec.push_back(vertices[i].pos.z);
+		quadVertexVec.push_back(vertices[i].uv.x);
+		quadVertexVec.push_back(vertices[i].uv.y);
+
+	}
+
+	const u16 indices[] = {
+		0,1,2,
+		0,2,3
+	};
+
+	int indicesSize = sizeof(indices) / sizeof(u16);
+
+	for (int i = 0; i < indicesSize; ++i)
+	{
+		quadIndicesVec.push_back(indices[i]);
+	}
+
+
+	std::vector<VertexBufferAttribute> vertexFormat;
+	vertexFormat.push_back(VertexBufferAttribute({ 0, 3, 0 }));
+	vertexFormat.push_back(VertexBufferAttribute({ 1, 2,sizeof(vec3) }));
+
+	Mesh* mesh = CreateMesh(app, &app->screenQuad);
+	//mesh->name = "Sphere";
+	mesh->AddSubmesh(vertexFormat, quadVertexVec, quadIndicesVec);
+	mesh->GenerateMeshData(app);
 }
 
 void CreateSphere(App* app)

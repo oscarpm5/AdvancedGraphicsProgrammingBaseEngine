@@ -196,6 +196,8 @@ struct App
 	GLuint model;
 
 	GLuint sphereMesh;
+
+	GLuint screenQuad;
 };
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName);
@@ -223,6 +225,7 @@ void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei l
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
 void CreateSphere(App* app);
+void CreateQuad(App* app);
 
 
 Mesh* CreateMesh(App * app, u32* index = nullptr);
