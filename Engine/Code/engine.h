@@ -139,6 +139,31 @@ const u16 indices[] = {
 	0,2,3
 };
 
+class Camera
+{
+public:
+	enum ProjectionMode
+	{
+		PERSPECTIVE,
+		ORTHOGONAL
+	};
+
+	ProjectionMode projectionMode;
+	float fov;
+	float aspectRatio;
+	float zNear;
+	float zFar;
+	glm::vec3 position;
+	glm::vec3 target;
+	glm::mat4 projection;
+	glm::mat4 view;
+
+public:
+	Camera();
+	Camera(float fov,float aspectRatio,float zNear,float zFar);
+	void UpdateMatrices();
+};
+
 struct App
 {
 	// Loop
@@ -195,6 +220,24 @@ struct App
 	GLuint model;
 
 
+	GLint maxUniformBufferSize;
+	GLint uniformBlockAlignment;
+
+
+
+	GLuint bufferHandle;
+	//Matrices for a single object (will be encapsulated into entities later on)
+	glm::mat4 worldMatrix;
+	glm::mat4 worldViewProjectionMatrix;
+
+
+
+
+
+	Camera cam;
+
+
+
 };
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName);
@@ -230,4 +273,8 @@ Mesh* CreateMesh(App * app, u32* index = nullptr);
 Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess, std::vector<u32> indicesToProess);
 
 void AddSubmeshToMesh(Submesh* submesh);
+
+glm::mat4 TransformScale(const glm::vec3& scaleFactors);
+glm::mat4 TransformPositionScale(const glm::vec3& pos, const glm::vec3& scaleFactors);
+
 

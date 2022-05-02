@@ -280,13 +280,32 @@ void Init(App* app)
 	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
-	app->mode = Mode_TexturedQuad;
+	app->mode = Mode_Count;
 
 	app->model = LoadModel(app, "Patrick/Patrick.obj");
 
+	float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
+	app->cam = Camera(60.0f, aspectRatio, 0.1f, 1000.0f);
+	app->cam.position = vec3(5.0f);
+	app->cam.target = vec3(0.0f);
+
+	app->worldMatrix = TransformPositionScale(vec3(2.5f, 1.5f, -2.0f), vec3(0.45f));
+	app->worldViewProjectionMatrix = app->cam.projection * app->cam.view * app->worldMatrix;
 
 	CreateSphere(app);
 	CreateQuad(app);
+
+	//Only need to do this once
+	glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
+	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
+
+
+	//For each buffer that needs to be created
+	glGenBuffers(1, &app->bufferHandle);
+	glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
+	glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 }
 
 void Gui(App* app)
@@ -340,6 +359,21 @@ void Update(App* app)
 			program.lastWriteTimestamp = currentTimestamp;
 		}
 	}
+
+	//Push data into the buffer (ordered according to the uniform block)
+	glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
+	u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
+	u32 bufferHead = 0;
+
+	memcpy(bufferData + bufferHead, glm::value_ptr(app->worldMatrix), sizeof(glm::mat4));
+	bufferHead += sizeof(glm::mat4);
+
+	memcpy(bufferData + bufferHead, glm::value_ptr(app->worldViewProjectionMatrix), sizeof(glm::mat4));
+	bufferHead += sizeof(glm::mat4);
+
+	glUnmapBuffer(GL_UNIFORM_BUFFER);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 
 }
 
@@ -430,6 +464,14 @@ void Render(App* app)
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
 			glUniform1i(app->texturedMeshProgram_uTexture, 0);
+
+
+#define BINDING(b) b
+			u32 blockOffset = 0;
+			u32 blockSize = sizeof(glm::mat4) * 2;
+			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->bufferHandle, blockOffset, blockSize);
+
+
 
 			Submesh& submesh = mesh.submeshes[i];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
@@ -548,7 +590,10 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 				}
 
 			}
-			assert(attributeWasLinked); //The submesh should provide an attribute for each vertex inputs
+			if (!attributeWasLinked)
+			{
+				ELOG("An attribute couldn't be linked"); //The submesh should provide an attribute for each vertex inputs
+			}
 		}
 		glBindVertexArray(0);
 	}
@@ -563,7 +608,7 @@ void CreateQuad(App* app)
 {
 	std::vector<float> quadVertexVec;
 	std::vector<u32> quadIndicesVec;
-	
+
 	const VertexV3V2 vertices[] = {
 		{glm::vec3(-1,-1,0.0),glm::vec2(0.0,0.0)}, //Bottom-left
 		{glm::vec3(1,-1,0.0),glm::vec2(1.0,0.0)}, //Bottom-right
@@ -674,6 +719,17 @@ Mesh* CreateMesh(App* app, u32* index)
 		*index = ((u32)app->meshes.size() - 1u);
 
 	return &app->meshes.back();
+}
+
+glm::mat4 TransformScale(const glm::vec3& scaleFactors)
+{
+	return glm::scale(scaleFactors);
+}
+
+glm::mat4 TransformPositionScale(const glm::vec3& pos, const glm::vec3& scaleFactors)
+{
+	glm::mat4 transform = glm::translate(pos);
+	return glm::scale(transform, scaleFactors);
 }
 
 /*
@@ -831,3 +887,34 @@ void Mesh::AddSubmesh(std::vector<VertexBufferAttribute> format, std::vector<flo
 }
 
 
+Camera::Camera()
+{
+	fov = glm::radians(60.0f);
+	aspectRatio = 1920.0f / 1080.0f;
+	zNear = 0.1f;
+	zFar = 1000.0f;
+
+	position = vec3(2.0f);
+	target = vec3(0.0f);
+	UpdateMatrices();
+}
+
+Camera::Camera(float fov, float aspectRatio, float zNear, float zFar) :fov(fov), aspectRatio(aspectRatio), zNear(zNear), zFar(zFar)
+{
+	position = vec3(0.0f, 0.0f, 0.0f);
+	target = vec3(0.0f, 0.0f, -1.0f);
+	UpdateMatrices();
+}
+
+void Camera::UpdateMatrices()
+{
+	view = glm::lookAt(position, target, vec3(0.0f, 1.0f, 0.0f));
+
+	if (projectionMode == ProjectionMode::PERSPECTIVE)
+	{
+		projection = glm::perspective(glm::radians(fov), aspectRatio, zNear, zFar);
+		return;
+	}
+	
+	assert("Orthogonal projection not avaliable yet!"); //TODO create orthogonal projection in the future?
+}
