@@ -164,6 +164,25 @@ public:
 	void UpdateMatrices();
 };
 
+class Entity
+{
+public:
+	String name;
+	u32 id;
+
+	glm::vec3 position;
+	glm::vec3 roation;
+	glm::vec3 scale;
+
+	glm::mat4 worldMatrix;
+	u32 modelIndex;
+	u32 localParamsOffset;
+	u32 localParamsSize;
+
+public:
+	glm::mat4 UpdateWorldMatrix();
+};
+
 struct App
 {
 	// Loop
@@ -188,6 +207,9 @@ struct App
 	std::vector<Mesh>  meshes;
 	std::vector<Model>  models;
 	std::vector<Program>  programs;
+
+
+	std::vector<Entity> entities;
 
 	// program indices
 	u32 texturedGeometryProgramIdx;
@@ -226,17 +248,12 @@ struct App
 
 
 	GLuint bufferHandle;
-	//Matrices for a single object (will be encapsulated into entities later on)
-	glm::mat4 worldMatrix;
-	glm::mat4 worldViewProjectionMatrix;
 
 
 
 
 
 	Camera cam;
-
-
 
 };
 
@@ -277,5 +294,9 @@ void AddSubmeshToMesh(Submesh* submesh);
 glm::mat4 TransformScale(const glm::vec3& scaleFactors);
 glm::mat4 TransformPositionScale(const glm::vec3& pos, const glm::vec3& scaleFactors);
 glm::mat4 TransformPositionScaleRot(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scaleFactors);
+
+u32 AddEntity(App* app, const char* name, u32 modelIndex);
+
+u32 Align(u32 value, u32 alignment);
 
 

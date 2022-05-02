@@ -286,7 +286,7 @@ void Init(App* app)
 
 	float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
 	app->cam = Camera(60.0f, aspectRatio, 0.1f, 1000.0f);
-	app->cam.position = vec3(0.0f, 0.0f, 5.0f);
+	app->cam.position = vec3(5.0f, 7.5f, 10.0f);
 	app->cam.target = vec3(0.0f, 0.0f, 0.0f);
 	app->cam.UpdateMatrices();
 
@@ -304,10 +304,19 @@ void Init(App* app)
 	glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+	u32 currentEntity =	AddEntity(app, "Patrick", app->model);//Add a patrick
+	app->entities[currentEntity].position = vec3(0.0f, 0.0f, 4.0f);
+	currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
+	app->entities[currentEntity].position = vec3(5.8f, 0.0f, 0.0f);
+	currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
+	app->entities[currentEntity].position = vec3(-3.5f, 0.0f, -3.5f);
 }
 
 void Gui(App* app)
 {
+	//ImGui::ShowDemoWindow();
+
+
 	ImGui::Begin("Info");
 	ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
 	ImGui::End();
@@ -340,7 +349,48 @@ void Gui(App* app)
 			app->cam.UpdateMatrices();
 		}
 
+		ImGui::Separator();
+		if (ImGui::Button("Add Patrick"))
+		{
+			AddEntity(app, "Patrick", app->model);
+		}
 
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_CollapsingHeader;
+		if (ImGui::CollapsingHeader("Entities", flags))
+		{
+			ImGui::Indent();
+			static int selected = -1;
+			for (int n = 0; n < app->entities.size(); ++n)
+			{
+				char buf[32];
+				sprintf(buf, "%s##%d", app->entities[n].name.str, app->entities[n].id);
+				if (ImGui::Selectable(buf, selected == n))
+					selected = n;
+			}
+			ImGui::Unindent();
+
+			if (selected != -1)
+			{
+				char buf[128];
+				sprintf(buf, "Transform: %s##%d", app->entities[selected].name.str, app->entities[selected].id);
+				if (ImGui::CollapsingHeader(buf, flags))
+				{
+					bool hasToUpdateMatrix = false;
+					float entityPos[3] = { app->entities[selected].position.x, app->entities[selected].position.y, app->entities[selected].position.z };
+					if (ImGui::DragFloat3("Position", entityPos))
+					{
+						app->entities[selected].position.x = entityPos[0];
+						app->entities[selected].position.y = entityPos[1];
+						app->entities[selected].position.z = entityPos[2];
+						hasToUpdateMatrix = true;
+					}
+
+
+					if (hasToUpdateMatrix)
+						app->entities[selected].UpdateWorldMatrix();
+				}
+			}
+		}
 
 
 
@@ -359,6 +409,7 @@ void Update(App* app)
 	{
 		app->showGlInfoWindow = !app->showGlInfoWindow;
 	}
+
 
 	// You can handle app->input keyboard/mouse here
 
@@ -379,24 +430,29 @@ void Update(App* app)
 
 	}
 
-	app->worldMatrix = TransformPositionScaleRot(vec3(0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.45f));
-	app->worldViewProjectionMatrix = app->cam.projection * app->cam.view * app->worldMatrix;
 
 	//Push data into the buffer (ordered according to the uniform block)
 	glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
 	u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
 	u32 bufferHead = 0;
 
-	memcpy(bufferData + bufferHead, glm::value_ptr(app->worldMatrix), sizeof(glm::mat4));
-	bufferHead += sizeof(glm::mat4);
+	for (int i = 0; i < app->entities.size(); ++i)
+	{
+		app->entities[i].UpdateWorldMatrix();
+		bufferHead = Align(bufferHead, app->uniformBlockAlignment);
+		app->entities[i].localParamsOffset = bufferHead;
 
-	memcpy(bufferData + bufferHead, glm::value_ptr(app->worldViewProjectionMatrix), sizeof(glm::mat4));
-	bufferHead += sizeof(glm::mat4);
+		memcpy(bufferData + bufferHead, glm::value_ptr(app->entities[i].worldMatrix), sizeof(glm::mat4));
+		bufferHead += sizeof(glm::mat4);
+
+		memcpy(bufferData + bufferHead, glm::value_ptr(app->cam.projection * app->cam.view * app->entities[i].worldMatrix), sizeof(glm::mat4));
+		bufferHead += sizeof(glm::mat4);
+
+		app->entities[i].localParamsSize = bufferHead - app->entities[i].localParamsOffset;
+	}
 
 	glUnmapBuffer(GL_UNIFORM_BUFFER);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-
 }
 
 void Render(App* app)
@@ -472,32 +528,33 @@ void Render(App* app)
 		Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 		glUseProgram(texturedMeshProgram.handle);
 
-
-		Model& model = app->models[app->model];
-		Mesh& mesh = app->meshes[model.meshIdx];
-
-		for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+		for (int n = 0; n < app->entities.size(); ++n)
 		{
-			GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
-			glBindVertexArray(vao);
 
-			u32 submeshMaterialIdx = model.materialIdx[i];
-			Material& submeshMaterial = app->materials[submeshMaterialIdx];
+			Model& model = app->models[app->entities[n].modelIndex];
+			Mesh& mesh = app->meshes[model.meshIdx];
 
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-			glUniform1i(app->texturedMeshProgram_uTexture, 0);
+			for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+			{
+				GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
+				glBindVertexArray(vao);
+
+				u32 submeshMaterialIdx = model.materialIdx[i];
+				Material& submeshMaterial = app->materials[submeshMaterialIdx];
+
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+				glUniform1i(app->texturedMeshProgram_uTexture, 0);
 
 #define BINDING(b) b
-			u32 blockOffset = 0;
-			u32 blockSize = sizeof(glm::mat4) * 2;
-			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->bufferHandle, blockOffset, blockSize);
+				glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->bufferHandle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
 
 
-			Submesh& submesh = mesh.submeshes[i];
-			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+				Submesh& submesh = mesh.submeshes[i];
+				glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+			}
+
 		}
-
 		//TODO consider puting this code into a method that takes a mesh or a model and a program and draws things
 		/*mesh = app->meshes[app->sphereMesh];
 		for (u32 i = 0; i < mesh.submeshes.size(); ++i)
@@ -764,6 +821,28 @@ glm::mat4 TransformPositionScaleRot(const glm::vec3& pos, const glm::vec3& rot, 
 	return transform;
 }
 
+u32 AddEntity(App* app, const char* name, u32 modelIndex)
+{
+	Entity toAdd;
+	toAdd.name = MakeString(name);
+	toAdd.modelIndex = modelIndex;
+	toAdd.id = rand();
+
+	toAdd.position = vec3(0.0f);
+	toAdd.roation = vec3(0.0f);
+	toAdd.scale = vec3(1.0f);
+
+	toAdd.UpdateWorldMatrix();
+
+	app->entities.push_back(toAdd);
+	return app->entities.size() - 1;
+}
+
+u32 Align(u32 value, u32 alignment)
+{
+	return (value + alignment - 1) & ~(alignment - 1);
+}
+
 /*
 Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess, std::vector<u32> indicesToProess)
 {
@@ -951,4 +1030,10 @@ void Camera::UpdateMatrices()
 	}
 
 	assert("Orthogonal projection not avaliable yet!"); //TODO create orthogonal projection in the future?
+}
+
+glm::mat4 Entity::UpdateWorldMatrix()
+{
+	worldMatrix = TransformPositionScaleRot(position, roation, scale);
+	return worldMatrix;
 }
