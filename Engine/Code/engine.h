@@ -183,6 +183,21 @@ public:
 	glm::mat4 UpdateWorldMatrix();
 };
 
+struct Buffer
+{
+	GLuint handle;
+	GLenum type;
+	u32 size;
+	u32 head;
+	void* data; // mapped data
+};
+
+enum LightType
+{
+	LightType_Directional,
+	LightType_Point
+};
+
 struct App
 {
 	// Loop
@@ -210,6 +225,8 @@ struct App
 
 
 	std::vector<Entity> entities;
+
+	std::vector<Buffer> buffers;
 
 	// program indices
 	u32 texturedGeometryProgramIdx;
@@ -296,7 +313,4 @@ glm::mat4 TransformPositionScale(const glm::vec3& pos, const glm::vec3& scaleFac
 glm::mat4 TransformPositionScaleRot(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scaleFactors);
 
 u32 AddEntity(App* app, const char* name, u32 modelIndex);
-
-u32 Align(u32 value, u32 alignment);
-
 

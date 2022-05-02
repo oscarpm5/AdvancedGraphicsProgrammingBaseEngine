@@ -11,6 +11,7 @@
 //TexCoords = 2
 
 #include "engine.h"
+#include "buffer_management.h"
 #include <imgui.h>
 #include <stb_image.h>
 #include <stb_image_write.h>
@@ -299,6 +300,7 @@ void Init(App* app)
 
 
 	//For each buffer that needs to be created
+
 	glGenBuffers(1, &app->bufferHandle);
 	glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
 	glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
@@ -836,11 +838,6 @@ u32 AddEntity(App* app, const char* name, u32 modelIndex)
 
 	app->entities.push_back(toAdd);
 	return app->entities.size() - 1;
-}
-
-u32 Align(u32 value, u32 alignment)
-{
-	return (value + alignment - 1) & ~(alignment - 1);
 }
 
 /*
