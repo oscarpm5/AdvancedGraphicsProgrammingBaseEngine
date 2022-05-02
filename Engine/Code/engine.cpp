@@ -290,9 +290,6 @@ void Init(App* app)
 	app->cam.target = vec3(0.0f, 0.0f, 0.0f);
 	app->cam.UpdateMatrices();
 
-	app->worldMatrix = TransformPositionScaleRot(vec3(0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.45f));
-	app->worldViewProjectionMatrix = app->cam.projection * app->cam.view * app->worldMatrix;
-
 	CreateSphere(app);
 	CreateQuad(app);
 
@@ -332,6 +329,25 @@ void Gui(App* app)
 		ImGui::End();
 	}
 
+	{
+		ImGui::Begin("Inspector");
+		float newPos[3] = { app->cam.position.x,app->cam.position.y,app->cam.position.z };
+		if (ImGui::DragFloat3("Cam Position", newPos))
+		{
+			app->cam.position.x = newPos[0];
+			app->cam.position.y = newPos[1];
+			app->cam.position.z = newPos[2];
+			app->cam.UpdateMatrices();
+		}
+
+
+
+
+
+
+		ImGui::End();
+	}
+
 }
 
 void Update(App* app)
@@ -362,6 +378,9 @@ void Update(App* app)
 
 
 	}
+
+	app->worldMatrix = TransformPositionScaleRot(vec3(0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.45f));
+	app->worldViewProjectionMatrix = app->cam.projection * app->cam.view * app->worldMatrix;
 
 	//Push data into the buffer (ordered according to the uniform block)
 	glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
