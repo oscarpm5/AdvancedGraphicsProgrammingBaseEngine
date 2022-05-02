@@ -276,5 +276,6 @@ void AddSubmeshToMesh(Submesh* submesh);
 
 glm::mat4 TransformScale(const glm::vec3& scaleFactors);
 glm::mat4 TransformPositionScale(const glm::vec3& pos, const glm::vec3& scaleFactors);
+glm::mat4 TransformPositionScaleRot(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scaleFactors);
 
 

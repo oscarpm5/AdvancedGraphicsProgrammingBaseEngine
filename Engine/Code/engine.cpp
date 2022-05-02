@@ -286,10 +286,11 @@ void Init(App* app)
 
 	float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
 	app->cam = Camera(60.0f, aspectRatio, 0.1f, 1000.0f);
-	app->cam.position = vec3(5.0f);
-	app->cam.target = vec3(0.0f);
+	app->cam.position = vec3(0.0f, 0.0f, 5.0f);
+	app->cam.target = vec3(0.0f, 0.0f, 0.0f);
+	app->cam.UpdateMatrices();
 
-	app->worldMatrix = TransformPositionScale(vec3(2.5f, 1.5f, -2.0f), vec3(0.45f));
+	app->worldMatrix = TransformPositionScaleRot(vec3(0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.45f));
 	app->worldViewProjectionMatrix = app->cam.projection * app->cam.view * app->worldMatrix;
 
 	CreateSphere(app);
@@ -358,6 +359,8 @@ void Update(App* app)
 			program.handle = CreateProgramFromSource(programSource, programName);
 			program.lastWriteTimestamp = currentTimestamp;
 		}
+
+
 	}
 
 	//Push data into the buffer (ordered according to the uniform block)
@@ -450,6 +453,7 @@ void Render(App* app)
 		Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 		glUseProgram(texturedMeshProgram.handle);
 
+
 		Model& model = app->models[app->model];
 		Mesh& mesh = app->meshes[model.meshIdx];
 
@@ -465,12 +469,10 @@ void Render(App* app)
 			glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
 			glUniform1i(app->texturedMeshProgram_uTexture, 0);
 
-
 #define BINDING(b) b
 			u32 blockOffset = 0;
 			u32 blockSize = sizeof(glm::mat4) * 2;
 			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->bufferHandle, blockOffset, blockSize);
-
 
 
 			Submesh& submesh = mesh.submeshes[i];
@@ -732,6 +734,17 @@ glm::mat4 TransformPositionScale(const glm::vec3& pos, const glm::vec3& scaleFac
 	return glm::scale(transform, scaleFactors);
 }
 
+glm::mat4 TransformPositionScaleRot(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scaleFactors)
+{
+	glm::mat4 transform = glm::translate(pos);
+	transform = glm::scale(transform, scaleFactors);
+	transform = glm::rotate(transform, glm::radians(rot.x), vec3(1.0f, 0.0f, 0.0f));
+	transform = glm::rotate(transform, glm::radians(rot.y), vec3(0.0f, 1.0f, 0.0f));
+	transform = glm::rotate(transform, glm::radians(rot.z), vec3(0.0f, 0.0f, 1.0f));
+
+	return transform;
+}
+
 /*
 Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess, std::vector<u32> indicesToProess)
 {
@@ -889,6 +902,7 @@ void Mesh::AddSubmesh(std::vector<VertexBufferAttribute> format, std::vector<flo
 
 Camera::Camera()
 {
+	projectionMode = ProjectionMode::PERSPECTIVE;
 	fov = glm::radians(60.0f);
 	aspectRatio = 1920.0f / 1080.0f;
 	zNear = 0.1f;
@@ -901,6 +915,7 @@ Camera::Camera()
 
 Camera::Camera(float fov, float aspectRatio, float zNear, float zFar) :fov(fov), aspectRatio(aspectRatio), zNear(zNear), zFar(zFar)
 {
+	projectionMode = ProjectionMode::PERSPECTIVE;
 	position = vec3(0.0f, 0.0f, 0.0f);
 	target = vec3(0.0f, 0.0f, -1.0f);
 	UpdateMatrices();
@@ -915,6 +930,6 @@ void Camera::UpdateMatrices()
 		projection = glm::perspective(glm::radians(fov), aspectRatio, zNear, zFar);
 		return;
 	}
-	
+
 	assert("Orthogonal projection not avaliable yet!"); //TODO create orthogonal projection in the future?
 }
