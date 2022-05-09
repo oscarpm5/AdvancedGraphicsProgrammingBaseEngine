@@ -302,6 +302,7 @@ void Init(App* app)
 	//For each buffer that needs to be created
 
 	app->lBuffer = CreateBuffer(app->maxUniformBufferSize, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
+	app->cBuffer = CreateBuffer(app->maxUniformBufferSize, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 
 	//glGenBuffers(1, &app->bufferHandle);
 	//glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
@@ -437,39 +438,49 @@ void Update(App* app)
 
 	//Push data into the buffer (ordered according to the uniform block)
 
+	//Local buffer
 	MapBuffer(app->lBuffer, GL_WRITE_ONLY);
-	
-	//u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
-	//u32 bufferHead = 0;
 
-	for (int i = 0; i < app->entities.size(); ++i)
+	for (u32 i = 0; i < app->entities.size(); ++i)
 	{
-		app->entities[i].UpdateWorldMatrix();
+		AlignHead(app->lBuffer, app->uniformBlockAlignment);
+		Entity& entity = app->entities[i];
+		
+		entity.UpdateWorldMatrix();
 		
 
-		AlignHead(app->lBuffer, app->uniformBlockAlignment);
-		app->entities[i].localParamsOffset = app->lBuffer.head;
-		PushMat4(app->lBuffer,app->entities[i].worldMatrix);
-		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * app->entities[i].worldMatrix);
-		app->entities[i].localParamsSize = app->lBuffer.head - app->entities[i].localParamsOffset;
+		entity.localParamsOffset = app->lBuffer.head;
+		PushMat4(app->lBuffer, entity.worldMatrix);
+		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * entity.worldMatrix);
+		entity.localParamsSize = app->lBuffer.head - entity.localParamsOffset;
 
-
-		//app->buffers[0].head = Align(app->buffers[0].head, app->uniformBlockAlignment);
-		//app->entities[i].localParamsOffset = app->buffers[0].head;
-
-		//memcpy((u8*)app->buffers[0].data + app->buffers[0].head, glm::value_ptr(app->entities[i].worldMatrix), sizeof(glm::mat4));
-		//app->buffers[0].head += sizeof(glm::mat4);
-
-		//memcpy((u8*)app->buffers[0].data + app->buffers[0].head, glm::value_ptr(app->cam.projection * app->cam.view * app->entities[i].worldMatrix), sizeof(glm::mat4));
-		//app->buffers[0].head += sizeof(glm::mat4);
-
-		//app->entities[i].localParamsSize = app->buffers[0].head - app->entities[i].localParamsOffset;
 	}
 
 	UnmapBuffer(app->lBuffer);
 
-	/*glUnmapBuffer(GL_UNIFORM_BUFFER);
-	glBindBuffer(GL_UNIFORM_BUFFER, 0);*/
+	//Global buffer
+	MapBuffer(app->cBuffer, GL_WRITE_ONLY);
+
+	app->globalParamsoffset = app->cBuffer.head;
+	PushVec3(app->cBuffer, app->cam.position);
+	PushUInt(app->cBuffer, app->lights.size());
+
+	for (u32 i = 0; i < app->lights.size(); ++i)
+	{
+		AlignHead(app->cBuffer, sizeof(glm::vec4));
+		Light& light = app->lights[i];
+		PushUInt(app->cBuffer, light.type);
+
+		PushVec3(app->cBuffer, light.color);
+		PushVec3(app->cBuffer, light.direction);
+		PushVec3(app->cBuffer, light.position);
+
+	}
+
+	app->globalparamsSize = app->cBuffer.head - app->globalParamsoffset;
+
+	UnmapBuffer(app->cBuffer);
+
 }
 
 void Render(App* app)
@@ -542,8 +553,12 @@ void Render(App* app)
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 
+#define BINDING(b) b
+
 		Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 		glUseProgram(texturedMeshProgram.handle);
+		glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalparamsSize); //Only once as is used for each object
+
 
 		for (int n = 0; n < app->entities.size(); ++n)
 		{
@@ -563,8 +578,8 @@ void Render(App* app)
 				glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
 				glUniform1i(app->texturedMeshProgram_uTexture, 0);
 
-#define BINDING(b) b
 				glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
+				//glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalparamsSize);
 
 
 				Submesh& submesh = mesh.submeshes[i];

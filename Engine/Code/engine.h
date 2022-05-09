@@ -278,10 +278,13 @@ struct App
 
 	Camera cam;
 
+	std::vector<Light> lights;
 
 	//buffers
-	Buffer lBuffer;
-	Buffer gBuffer;
+	Buffer lBuffer;//local buffers
+	Buffer cBuffer;//common buffers
+	u32 globalParamsoffset;
+	u32 globalparamsSize;
 
 };
 
