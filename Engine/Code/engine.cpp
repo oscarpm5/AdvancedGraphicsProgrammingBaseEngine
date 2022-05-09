@@ -301,7 +301,7 @@ void Init(App* app)
 
 	//For each buffer that needs to be created
 
-	app->buffers.push_back(CreateBuffer(app->maxUniformBufferSize, GL_UNIFORM_BUFFER, GL_STREAM_DRAW));
+	app->lBuffer = CreateBuffer(app->maxUniformBufferSize, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
 
 	//glGenBuffers(1, &app->bufferHandle);
 	//glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
@@ -437,7 +437,7 @@ void Update(App* app)
 
 	//Push data into the buffer (ordered according to the uniform block)
 
-	MapBuffer(app->buffers[0], GL_WRITE_ONLY);
+	MapBuffer(app->lBuffer, GL_WRITE_ONLY);
 	
 	//u8* bufferData = (u8*)glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
 	//u32 bufferHead = 0;
@@ -447,11 +447,11 @@ void Update(App* app)
 		app->entities[i].UpdateWorldMatrix();
 		
 
-		AlignHead(app->buffers[0], app->uniformBlockAlignment);
-		app->entities[i].localParamsOffset = app->buffers[0].head;
-		PushMat4(app->buffers[0],app->entities[i].worldMatrix);
-		PushMat4(app->buffers[0], app->cam.projection * app->cam.view * app->entities[i].worldMatrix);
-		app->entities[i].localParamsSize = app->buffers[0].head - app->entities[i].localParamsOffset;
+		AlignHead(app->lBuffer, app->uniformBlockAlignment);
+		app->entities[i].localParamsOffset = app->lBuffer.head;
+		PushMat4(app->lBuffer,app->entities[i].worldMatrix);
+		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * app->entities[i].worldMatrix);
+		app->entities[i].localParamsSize = app->lBuffer.head - app->entities[i].localParamsOffset;
 
 
 		//app->buffers[0].head = Align(app->buffers[0].head, app->uniformBlockAlignment);
@@ -466,7 +466,7 @@ void Update(App* app)
 		//app->entities[i].localParamsSize = app->buffers[0].head - app->entities[i].localParamsOffset;
 	}
 
-	UnmapBuffer(app->buffers[0]);
+	UnmapBuffer(app->lBuffer);
 
 	/*glUnmapBuffer(GL_UNIFORM_BUFFER);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);*/
@@ -564,7 +564,7 @@ void Render(App* app)
 				glUniform1i(app->texturedMeshProgram_uTexture, 0);
 
 #define BINDING(b) b
-				glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->buffers[0].handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
+				glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
 
 
 				Submesh& submesh = mesh.submeshes[i];

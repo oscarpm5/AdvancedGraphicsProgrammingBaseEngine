@@ -198,6 +198,14 @@ enum LightType
 	LightType_Point
 };
 
+struct Light
+{
+	LightType type;
+	vec3 color;
+	vec3 direction;
+	vec3 position;
+};
+
 struct App
 {
 	// Loop
@@ -225,8 +233,6 @@ struct App
 
 
 	std::vector<Entity> entities;
-
-	std::vector<Buffer> buffers;
 
 	// program indices
 	u32 texturedGeometryProgramIdx;
@@ -271,6 +277,11 @@ struct App
 
 
 	Camera cam;
+
+
+	//buffers
+	Buffer lBuffer;
+	Buffer gBuffer;
 
 };
 
