@@ -301,8 +301,8 @@ void Init(App* app)
 
 	//For each buffer that needs to be created
 
-	app->lBuffer = CreateBuffer(app->maxUniformBufferSize, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
-	app->cBuffer = CreateBuffer(app->maxUniformBufferSize, GL_UNIFORM_BUFFER, GL_STREAM_DRAW);
+	app->lBuffer = CreateConstantBuffer(app->maxUniformBufferSize);
+	app->cBuffer = CreateConstantBuffer(app->maxUniformBufferSize);
 
 	//glGenBuffers(1, &app->bufferHandle);
 	//glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
@@ -316,7 +316,9 @@ void Init(App* app)
 	currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
 	app->entities[currentEntity].position = vec3(-3.5f, 0.0f, -3.5f);
 
-	
+	//Lights 
+	CreateDirectionalLight(app, vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0));
+	//CreateDirectionalLight(app, vec3(0.5,0.0,0.5), vec3(1.0, -1.0, -1.0));
 }
 
 void Gui(App* app)
@@ -452,8 +454,8 @@ void Update(App* app)
 	{
 		AlignHead(app->cBuffer, sizeof(glm::vec4));
 		Light& light = app->lights[i];
-		PushUInt(app->cBuffer, light.type);
 
+		PushUInt(app->cBuffer, light.type);
 		PushVec3(app->cBuffer, light.color);
 		PushVec3(app->cBuffer, light.direction);
 		PushVec3(app->cBuffer, light.position);
@@ -484,9 +486,7 @@ void Update(App* app)
 
 	UnmapBuffer(app->lBuffer);
 
-	//Lights 
-	CreateDirectionalLight(app, vec3(0.5,0.5,0.5), vec3(1.0, 1.0, 1.0));
-	//CreateDirectionalLight(app, vec3(0.5,0.0,0.5), vec3(1.0, -1.0, -1.0));
+	
 
 }
 
