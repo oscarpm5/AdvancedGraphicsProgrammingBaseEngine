@@ -62,6 +62,13 @@ layout(location=2) in vec2 aTexCoord;
 //layout(location=4) in vec3 aBitangent;
 
 
+layout( binding = 0, std140) uniform GlobalParams
+{
+	vec3 uCameraPosition;
+	unsigned int uLightCount;
+	Light uLight[16];
+};
+
 layout( binding = 1, std140) uniform LocalParams
 {
 	mat4 uWorldMatrix;
@@ -92,12 +99,6 @@ in vec3 vPosition;
 in vec3 vNormal;
 in vec3 vViewDir;
 
-layout( binding = 0, std140) uniform GlobalParams
-{
-	vec3 uCameraPosition;
-	unsigned int uLightCount;
-	Light uLight[16];
-};
 
 
 uniform sampler2D uTexture;

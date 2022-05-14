@@ -438,25 +438,6 @@ void Update(App* app)
 
 	//Push data into the buffer (ordered according to the uniform block)
 
-	//Local buffer
-	MapBuffer(app->lBuffer, GL_WRITE_ONLY);
-
-	for (u32 i = 0; i < app->entities.size(); ++i)
-	{
-		AlignHead(app->lBuffer, app->uniformBlockAlignment);
-		Entity& entity = app->entities[i];
-		
-		entity.UpdateWorldMatrix();
-		
-
-		entity.localParamsOffset = app->lBuffer.head;
-		PushMat4(app->lBuffer, entity.worldMatrix);
-		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * entity.worldMatrix);
-		entity.localParamsSize = app->lBuffer.head - entity.localParamsOffset;
-
-	}
-
-	UnmapBuffer(app->lBuffer);
 
 	//Global buffer
 	MapBuffer(app->cBuffer, GL_WRITE_ONLY);
@@ -480,6 +461,26 @@ void Update(App* app)
 	app->globalparamsSize = app->cBuffer.head - app->globalParamsoffset;
 
 	UnmapBuffer(app->cBuffer);
+
+	//Local buffer
+	MapBuffer(app->lBuffer, GL_WRITE_ONLY);
+
+	for (u32 i = 0; i < app->entities.size(); ++i)
+	{
+		AlignHead(app->lBuffer, app->uniformBlockAlignment);
+		Entity& entity = app->entities[i];
+
+		entity.UpdateWorldMatrix();
+
+
+		entity.localParamsOffset = app->lBuffer.head;
+		PushMat4(app->lBuffer, entity.worldMatrix);
+		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * entity.worldMatrix);
+		entity.localParamsSize = app->lBuffer.head - entity.localParamsOffset;
+
+	}
+
+	UnmapBuffer(app->lBuffer);
 
 }
 
