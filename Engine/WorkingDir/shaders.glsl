@@ -107,8 +107,23 @@ layout(location=0) out vec4 oColor;
 void main()
 {
 	oColor = texture(uTexture,vTexCoord);
-	//float luminance = dot(normalize(vNormal),normalize(vec3(1.0,1.0,1.0)));
-	//oColor =  vec4(oColor.xyz * vec3(luminance,luminance,luminance),1.0);
+
+	//TODO this doesn't work
+	/*
+	vec3 lightColor = vec3(0.0);
+	for(int i = 0; i<uLightCount; ++i)
+	{
+		Light l = uLight[i];
+
+		if(l.type==0) //if directional light
+		{
+			float luminance = dot(normalize(vNormal),normalize(l.direction));
+			lightColor += l.color * luminance;
+		}
+	}
+
+	oColor =  vec4(oColor.xyz * lightColor,1.0);
+	*/
 }
 
 
