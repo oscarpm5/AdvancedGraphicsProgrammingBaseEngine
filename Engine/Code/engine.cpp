@@ -318,7 +318,7 @@ void Init(App* app)
 
 	//Lights 
 	CreateDirectionalLight(app, vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0));
-	//CreateDirectionalLight(app, vec3(0.5,0.0,0.5), vec3(1.0, -1.0, -1.0));
+	CreateDirectionalLight(app, vec3(0.5,0.0,0.5), vec3(1.0, -1.0, -1.0));
 }
 
 void Gui(App* app)
