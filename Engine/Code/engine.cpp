@@ -315,6 +315,8 @@ void Init(App* app)
 	app->entities[currentEntity].position = vec3(5.8f, 0.0f, 0.0f);
 	currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
 	app->entities[currentEntity].position = vec3(-3.5f, 0.0f, -3.5f);
+
+	
 }
 
 void Gui(App* app)
@@ -481,6 +483,10 @@ void Update(App* app)
 	}
 
 	UnmapBuffer(app->lBuffer);
+
+	//Lights 
+	CreateDirectionalLight(app, vec3(0.5,0.5,0.5), vec3(1.0, 1.0, 1.0));
+	//CreateDirectionalLight(app, vec3(0.5,0.0,0.5), vec3(1.0, -1.0, -1.0));
 
 }
 
@@ -869,6 +875,30 @@ u32 AddEntity(App* app, const char* name, u32 modelIndex)
 
 	app->entities.push_back(toAdd);
 	return app->entities.size() - 1;
+}
+
+Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
+{
+	Light l;
+	l.color = color;
+	l.direction = direction;
+	l.type = LightType::LightType_Directional;
+	l.position = vec3(0.0,0.0,0.0);
+	app->lights.push_back(l);
+
+	return &app->lights.back();
+}
+
+Light* CreatePointLight(App* app, vec3 color, vec3 position)
+{
+	Light l;
+	l.color = color;
+	l.direction = vec3(0.0, 0.0, 0.0);
+	l.type = LightType::LightType_Point;
+	l.position = position;
+	app->lights.push_back(l);
+
+	return &app->lights.back();
 }
 
 /*

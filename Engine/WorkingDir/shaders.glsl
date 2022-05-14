@@ -99,7 +99,12 @@ in vec3 vPosition;
 in vec3 vNormal;
 in vec3 vViewDir;
 
-
+layout( binding = 0, std140) uniform GlobalParams
+{
+	vec3 uCameraPosition;
+	unsigned int uLightCount;
+	Light uLight[16];
+};
 
 uniform sampler2D uTexture;
 layout(location=0) out vec4 oColor;
@@ -109,7 +114,7 @@ void main()
 	oColor = texture(uTexture,vTexCoord);
 
 	//TODO this doesn't work
-	/*
+	
 	vec3 lightColor = vec3(0.0);
 	for(int i = 0; i<uLightCount; ++i)
 	{
@@ -123,7 +128,7 @@ void main()
 	}
 
 	oColor =  vec4(oColor.xyz * lightColor,1.0);
-	*/
+	
 }
 
 

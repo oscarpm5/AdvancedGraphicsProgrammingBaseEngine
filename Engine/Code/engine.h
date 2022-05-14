@@ -328,3 +328,5 @@ glm::mat4 TransformPositionScaleRot(const glm::vec3& pos, const glm::vec3& rot, 
 
 u32 AddEntity(App* app, const char* name, u32 modelIndex);
 
+Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction);
+Light* CreatePointLight(App* app, vec3 color, vec3 position);
