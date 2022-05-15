@@ -955,29 +955,8 @@ Framebuffer GenerateFrameBuffer(App* app)
 {
 	Framebuffer ret;
 
-	glGenTextures(1, &ret.colorAttachmentHandle);
-	glBindTexture(GL_TEXTURE_2D, ret.colorAttachmentHandle);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	glGenTextures(1, &ret.depthAttachmentHandle);
-	glBindTexture(GL_TEXTURE_2D, ret.depthAttachmentHandle);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, app->displaySize.x, app->displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
+	ret.colorAttachmentHandle = GenerateColTex2D(app->displaySize);
+	ret.depthAttachmentHandle = GenerateDepthTex2D(app->displaySize);
 
 	ret.handle;
 	glGenFramebuffers(1, &ret.handle);
@@ -1005,6 +984,41 @@ Framebuffer GenerateFrameBuffer(App* app)
 	GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
 	glDrawBuffers(1, buffers);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	return ret;
+}
+
+GLuint GenerateColTex2D(vec2 displaySize)
+{
+	GLuint ret;
+	glGenTextures(1, &ret);
+	glBindTexture(GL_TEXTURE_2D, ret);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, displaySize.x, displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return ret;
+}
+
+GLuint GenerateDepthTex2D(vec2 displaySize)
+{
+	GLuint ret;
+	glGenTextures(1, &ret);
+	glBindTexture(GL_TEXTURE_2D, ret);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, displaySize.x, displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	return ret;
 }

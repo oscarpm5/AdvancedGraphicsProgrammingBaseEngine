@@ -342,3 +342,7 @@ Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction);
 Light* CreatePointLight(App* app, vec3 color, vec3 position);
 
 Framebuffer GenerateFrameBuffer(App* app);
+
+GLuint GenerateColTex2D(vec2 displaySize);
+
+GLuint GenerateDepthTex2D(vec2 displaySize);
