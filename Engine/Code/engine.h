@@ -206,6 +206,13 @@ struct Light
 	vec3 position;
 };
 
+struct Framebuffer
+{
+	GLuint handle;
+	GLuint colorAttachmentHandle;
+	GLuint depthAttachmentHandle;
+};
+
 struct App
 {
 	// Loop
@@ -286,7 +293,8 @@ struct App
 	u32 globalParamsoffset;
 	u32 globalparamsSize;
 
-	GLuint testFramebuffer;
+	Framebuffer testFramebuffer;
+	
 
 };
 
@@ -333,4 +341,4 @@ u32 AddEntity(App* app, const char* name, u32 modelIndex);
 Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction);
 Light* CreatePointLight(App* app, vec3 color, vec3 position);
 
-GLuint GenerateFrameBuffer(App* app);
+Framebuffer GenerateFrameBuffer(App* app);
