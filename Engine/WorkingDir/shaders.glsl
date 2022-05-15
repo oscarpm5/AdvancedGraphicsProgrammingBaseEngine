@@ -111,11 +111,12 @@ layout( binding = 0, std140) uniform GlobalParams
 };
 
 layout(location=0) out vec4 oColor;
+layout(location=1) out vec4 oNormal;
 
 void main()
 {
 	oColor = texture(uTexture,vTexCoord);
-
+	oNormal = vec4(vNormal,1.0);
 	//TODO this doesn't work
 	
 	vec3 lightColor = vec3(0.0);

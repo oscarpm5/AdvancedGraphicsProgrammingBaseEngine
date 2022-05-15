@@ -498,7 +498,7 @@ void Render(App* app)
 	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
 
 	//Select on which render targets to draw
-	GLuint drawbuffers[] = { GL_COLOR_ATTACHMENT0 };
+	GLuint drawbuffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
 
@@ -660,7 +660,7 @@ void Render(App* app)
 		glBindVertexArray(vao);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachmentHandle);
+		glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment0Handle);
 		glUniform1i(app->programUniformTexture, 0);
 
 		Submesh& submesh = mesh.submeshes[i];
@@ -955,13 +955,21 @@ Framebuffer GenerateFrameBuffer(App* app)
 {
 	Framebuffer ret;
 
-	ret.colorAttachmentHandle = GenerateColTex2D(app->displaySize);
+	ret.colorAttachment0Handle = GenerateColTex2D(app->displaySize);
+	ret.colorAttachment1Handle = GenerateColTex2D(app->displaySize);
+	ret.colorAttachment2Handle = GenerateColTex2D(app->displaySize);
+	ret.colorAttachment3Handle = GenerateColTex2D(app->displaySize);
+
 	ret.depthAttachmentHandle = GenerateDepthTex2D(app->displaySize);
 
 	ret.handle;
 	glGenFramebuffers(1, &ret.handle);
 	glBindFramebuffer(GL_FRAMEBUFFER, ret.handle);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D, ret.colorAttachmentHandle, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D, ret.colorAttachment0Handle, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, ret.colorAttachment1Handle, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, ret.colorAttachment2Handle, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, ret.colorAttachment3Handle, 0);
+
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, ret.depthAttachmentHandle, 0);
 
 	GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -981,8 +989,8 @@ Framebuffer GenerateFrameBuffer(App* app)
 		}
 	}
 
-	GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
-	glDrawBuffers(1, buffers);
+	GLenum buffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
+	glDrawBuffers(ARRAY_COUNT(buffers), buffers);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	return ret;
