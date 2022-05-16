@@ -203,6 +203,14 @@ void main()
 
 #ifdef LIGHTING_PASS
 
+struct Light
+{
+	unsigned int type;
+	vec3 color;
+	vec3 direction;
+	vec3 position;
+};
+
 #if defined(VERTEX) ///////////////////////////////////////////////////
 
 // TODO: Write your vertex shader here
@@ -226,6 +234,14 @@ uniform sampler2D uAlbedo;
 uniform sampler2D uNormal;
 uniform sampler2D uPosition;
 
+layout( binding = 0, std140) uniform GlobalParams
+{
+	vec3 uCameraPosition;
+	unsigned int uLightCount;
+	Light uLight[16];
+};
+
+
 layout(location=0) out vec4 oRadiance;
 
 void main()
@@ -234,7 +250,24 @@ void main()
 	vec4 normal = texture(uNormal,vTexCoord);	
 	vec4 position = texture(uPosition,vTexCoord);	
 
-	oRadiance = albedo*normal*position;	
+
+	vec3 lightColor = vec3(0.0);
+	for(int i = 0; i<uLightCount; ++i)
+	{
+		Light l = uLight[i];
+
+		if(l.type==0) //if directional light
+		{
+			float luminance = dot(normalize(normal.xyz),normalize(l.direction));
+			lightColor += l.color * luminance;
+		}
+	}
+
+	oRadiance =  vec4(albedo.xyz * lightColor,1.0);
+
+
+
+	//oRadiance = albedo*normal*position;	
 }
 
 
