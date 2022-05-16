@@ -248,6 +248,9 @@ struct App
 	u32 texturedGeometryProgramIdx;
 	u32 texturedMeshProgramIdx;
 
+	u32 deferredGeometryProgramIdx;
+	u32 deferredLightProgramIdx;
+
 	// texture indices
 	u32 diceTexIdx;
 	u32 whiteTexIdx;
@@ -269,6 +272,9 @@ struct App
 
 	// Location of the texture uniform in the textured mesh shader
 	GLuint texturedMeshProgram_uTexture;
+
+	//Location of the texture uniform in the deferred geometry shader
+	GLuint deferredGeometry_uTexture;
 
 
 	//Patrick Model
@@ -320,6 +326,12 @@ void Gui(App* app);
 void Update(App* app);
 
 void Render(App* app);
+
+void DeferredRender(App* app);
+
+void GeometryPass(App* app);
+
+void LightPass(App* app);
 
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 

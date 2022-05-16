@@ -138,3 +138,62 @@ void main()
 
 #endif
 #endif
+
+//////////////////////////////////////////////////////////////////////////////
+
+#ifdef GEOMETRY_PASS
+
+#if defined(VERTEX) ///////////////////////////////////////////////////
+
+// TODO: Write your vertex shader here
+layout(location=0) in vec3 aPosition;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in vec2 aTexCoord;
+
+
+layout( binding = 1, std140) uniform LocalParams
+{
+	mat4 uWorldMatrix;
+	mat4 uWorldViewProjectionMatrix;
+};
+
+
+out vec3 vPosition; //In WorldSpace
+out vec3 vNormal; //In WorldSpace
+out vec2 vTexCoord;
+
+void main()
+{
+	vPosition = vec3(uWorldMatrix*vec4(aPosition,1.0));
+	vNormal = vec3(uWorldMatrix*vec4(aNormal,0.0));
+	vTexCoord = aTexCoord;
+
+	gl_Position = uWorldViewProjectionMatrix*vec4(aPosition,1.0);
+}
+
+#elif defined(FRAGMENT) ///////////////////////////////////////////////
+
+// TODO: Write your fragment shader here
+in vec3 vPosition;
+in vec3 vNormal;
+in vec2 vTexCoord;
+
+
+uniform sampler2D uTexture;
+
+layout(location=0) out vec4 oAlbedo;
+layout(location=1) out vec4 oNormal;
+layout(location=2) out vec4 oPosition;
+
+
+void main()
+{
+	oAlbedo = texture(uTexture,vTexCoord);
+	oNormal = vec4(vNormal,1.0);
+	oPosition = vec4(vPosition,1.0);
+	
+}
+
+
+#endif
+#endif
