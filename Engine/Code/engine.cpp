@@ -277,19 +277,19 @@ void Init(App* app)
 	app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "SHOW_TEXTURED_MESH");
 	Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 	app->texturedMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
-	
+
 	app->deferredGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "GEOMETRY_PASS");
 	Program& deferredGeometryIdx = app->programs[app->deferredGeometryProgramIdx];
 	app->deferredGeometry_uTexture = glGetUniformLocation(deferredGeometryIdx.handle, "uTexture");
 
-	app->deferredLightProgramIdx = LoadProgram(app, "shaders.glsl", "LIGTHTING_PASS");
+	app->deferredLightProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHTING_PASS");
 	Program& deferredLightingIdx = app->programs[app->deferredLightProgramIdx];
 	app->deferredLighting_uAlbedo = glGetUniformLocation(deferredLightingIdx.handle, "uAlbedo");
 	app->deferredLighting_uNormal = glGetUniformLocation(deferredLightingIdx.handle, "uNormal");
 	app->deferredLighting_uPosition = glGetUniformLocation(deferredLightingIdx.handle, "uPosition");
 
-	
-	
+
+
 	//Texture
 	app->diceTexIdx = LoadTexture2D(app, "dice.png");
 	app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
@@ -325,7 +325,7 @@ void Init(App* app)
 	//glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
 	//glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-	u32 currentEntity =	AddEntity(app, "Patrick", app->model);//Add a patrick
+	u32 currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
 	app->entities[currentEntity].position = vec3(0.0f, 0.0f, 4.0f);
 	currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
 	app->entities[currentEntity].position = vec3(5.8f, 0.0f, 0.0f);
@@ -334,7 +334,7 @@ void Init(App* app)
 
 	//Lights 
 	CreateDirectionalLight(app, vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0));
-	CreateDirectionalLight(app, vec3(0.5,0.0,0.5), vec3(1.0, -1.0, -1.0));
+	CreateDirectionalLight(app, vec3(0.5, 0.0, 0.5), vec3(1.0, -1.0, -1.0));
 
 	app->testFramebuffer = GenerateFrameBuffer(app);
 }
@@ -504,7 +504,7 @@ void Update(App* app)
 
 	UnmapBuffer(app->lBuffer);
 
-	
+
 
 }
 
@@ -533,7 +533,7 @@ void Render(App* app)
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	
+
 
 
 	switch (app->mode)
@@ -592,7 +592,7 @@ void Render(App* app)
 	break;
 	case Mode_Count:
 	{
-		
+
 		glEnable(GL_CULL_FACE);
 		glEnable(GL_DEPTH_TEST);
 
@@ -616,7 +616,7 @@ void Render(App* app)
 				u32 submeshMaterialIdx = model.materialIdx[i];
 				Material& submeshMaterial = app->materials[submeshMaterialIdx];
 
-				
+
 				glUniform1i(app->texturedMeshProgram_uTexture, 0);
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
@@ -695,7 +695,6 @@ void Render(App* app)
 
 void DeferredRender(App* app)
 {
-
 	GeometryPass(app);
 	LightPass(app);
 }
@@ -710,7 +709,7 @@ void GeometryPass(App* app)
 	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
 
 	//Select on which render targets to draw
-	GLuint drawbuffers[] = { 
+	GLuint drawbuffers[] = {
 		GL_COLOR_ATTACHMENT0, //Albedo
 		GL_COLOR_ATTACHMENT1, //Normals
 		GL_COLOR_ATTACHMENT2, //Position
@@ -765,10 +764,15 @@ void GeometryPass(App* app)
 
 void LightPass(App* app)
 {
+	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	/*glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
+	glBlendFunc(GL_ONE, GL_ONE);*/
 
 	//Render on this framebuffer render targets
 	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
@@ -782,8 +786,35 @@ void LightPass(App* app)
 	Program& deferredlightProgram = app->programs[app->deferredLightProgramIdx];
 	glUseProgram(deferredlightProgram.handle);
 
+	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalparamsSize); //Only once as is used for each object
+
+
 	//TODO push sphere lights as geometry
-	//TODO render quad
+	
+	
+	//render quad
+	Mesh& mesh = app->meshes[app->screenQuad];
+
+
+	GLuint vao = FindVAO(mesh, 0, deferredlightProgram);
+	glBindVertexArray(vao);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment0Handle);
+	glUniform1i(app->deferredLighting_uAlbedo, 0);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment1Handle);
+	glUniform1i(app->deferredLighting_uNormal, 1);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment2Handle);
+	glUniform1i(app->deferredLighting_uPosition, 2);
+
+	Submesh& submesh = mesh.submeshes[0];
+	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -1050,7 +1081,7 @@ Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 	l.color = color;
 	l.direction = direction;
 	l.type = LightType::LightType_Directional;
-	l.position = vec3(0.0,0.0,0.0);
+	l.position = vec3(0.0, 0.0, 0.0);
 	app->lights.push_back(l);
 
 	return &app->lights.back();
@@ -1082,7 +1113,7 @@ Framebuffer GenerateFrameBuffer(App* app)
 	ret.handle;
 	glGenFramebuffers(1, &ret.handle);
 	glBindFramebuffer(GL_FRAMEBUFFER, ret.handle);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D, ret.colorAttachment0Handle, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ret.colorAttachment0Handle, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, ret.colorAttachment1Handle, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, ret.colorAttachment2Handle, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, ret.colorAttachment3Handle, 0);
