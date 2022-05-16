@@ -309,7 +309,8 @@ struct App
 
 	Framebuffer testFramebuffer;
 	
-
+	//Texture Display mode
+	u32 displayMode;
 };
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName);
@@ -333,6 +334,8 @@ void Update(App* app);
 void Render(App* app);
 
 void DeferredRender(App* app);
+
+GLuint GetDisplayTexture(App* app);
 
 void GeometryPass(App* app);
 

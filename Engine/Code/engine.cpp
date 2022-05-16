@@ -242,6 +242,7 @@ u32 LoadTexture2D(App* app, const char* filepath)
 
 void Init(App* app)
 {
+	app->displayMode = 3;//TODO change this int into an enum?
 
 	if (GLVersion.major > 4 || (GLVersion.major = 4 && GLVersion.minor >= 3))
 	{
@@ -363,6 +364,14 @@ void Gui(App* app)
 			ImGui::Unindent();
 		}
 		ImGui::End();
+	}
+
+	{
+		static int current_draw_mode = 3;
+		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Radiance\0\0"))
+		{
+			app->displayMode = current_draw_mode;
+		}
 	}
 
 	{
@@ -697,7 +706,40 @@ void DeferredRender(App* app)
 {
 	GeometryPass(app);
 	LightPass(app);
-	RenderTextureToScreen(app, app->testFramebuffer.colorAttachment3Handle);
+
+
+
+	RenderTextureToScreen(app, GetDisplayTexture(app));
+}
+
+GLuint GetDisplayTexture(App* app)
+{
+	switch (app->displayMode)
+	{
+	case 0:
+	{
+		return app->testFramebuffer.colorAttachment0Handle;
+	}
+	break;
+	case 1:
+	{
+		return app->testFramebuffer.colorAttachment1Handle;
+	}
+	break;
+	case 2:
+	{
+		return app->testFramebuffer.colorAttachment2Handle;
+	}
+	break;
+	case 3:
+	{
+		return app->testFramebuffer.colorAttachment3Handle;
+	}
+	break;
+	}
+
+	ELOG("No display mode selected!");
+	return app->testFramebuffer.colorAttachment3Handle;
 }
 
 void GeometryPass(App* app)
