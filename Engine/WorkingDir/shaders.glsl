@@ -22,12 +22,20 @@ void main()
 
 // TODO: Write your fragment shader here
 in vec2 vTexCoord;
+
 uniform sampler2D uTexture;
+uniform int isDepth;
+
 layout(location=0) out vec4 oColor;
 
 void main()
 {
 	oColor = texture(uTexture,vTexCoord);	
+	if(isDepth==1)
+	{
+		float depth = texture(uTexture,vTexCoord).x;	
+		oColor = vec4(depth,depth,depth,1.0);
+	}
 }
 
 

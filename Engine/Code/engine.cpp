@@ -274,6 +274,7 @@ void Init(App* app)
 	app->texturedGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
 	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
 	app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
+	app->programUniformIsDepth = glGetUniformLocation(texturedGeometryProgram.handle, "isDepth");
 
 	app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "SHOW_TEXTURED_MESH");
 	Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
@@ -368,7 +369,7 @@ void Gui(App* app)
 
 	{
 		static int current_draw_mode = 3;
-		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Radiance\0\0"))
+		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Radiance\0Depth\0\0"))
 		{
 			app->displayMode = current_draw_mode;
 		}
@@ -707,9 +708,7 @@ void DeferredRender(App* app)
 	GeometryPass(app);
 	LightPass(app);
 
-
-
-	RenderTextureToScreen(app, GetDisplayTexture(app));
+	RenderTextureToScreen(app, GetDisplayTexture(app), app->displayMode == 4 ? true:false);
 }
 
 GLuint GetDisplayTexture(App* app)
@@ -736,6 +735,11 @@ GLuint GetDisplayTexture(App* app)
 		return app->testFramebuffer.colorAttachment3Handle;
 	}
 	break;
+	case 4:
+	{
+		return app->testFramebuffer.depthAttachmentHandle;
+	}
+	break;
 	}
 
 	ELOG("No display mode selected!");
@@ -755,7 +759,7 @@ void GeometryPass(App* app)
 	GLuint drawbuffers[] = {
 		GL_COLOR_ATTACHMENT0, //Albedo
 		GL_COLOR_ATTACHMENT1, //Normals
-		GL_COLOR_ATTACHMENT2, //Position
+		GL_COLOR_ATTACHMENT2 //Position
 	};
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
@@ -809,13 +813,10 @@ void LightPass(App* app)
 {
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	/*glEnable(GL_DEPTH_TEST);
-	glDepthMask(GL_FALSE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);*/
 
 	//Render on this framebuffer render targets
 	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
@@ -862,10 +863,10 @@ void LightPass(App* app)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void RenderTextureToScreen(App* app, GLuint textureHandle)
+void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth)
 {
 	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -886,6 +887,8 @@ void RenderTextureToScreen(App* app, GLuint textureHandle)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, textureHandle);
 	glUniform1i(app->programUniformTexture, 0);
+
+	glUniform1i(app->programUniformIsDepth, isDepth ? 1 : 0);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
@@ -1179,19 +1182,21 @@ Framebuffer GenerateFrameBuffer(App* app)
 	Framebuffer ret;
 
 	ret.colorAttachment0Handle = GenerateColTex2D(app->displaySize);
-	ret.colorAttachment1Handle = GenerateColTex2D(app->displaySize);
-	ret.colorAttachment2Handle = GenerateColTex2D(app->displaySize);
+	ret.colorAttachment1Handle = GenerateColTex2DHighPrecision(app->displaySize);
+	ret.colorAttachment2Handle = GenerateColTex2DHighPrecision(app->displaySize);
 	ret.colorAttachment3Handle = GenerateColTex2D(app->displaySize);
+
 
 	ret.depthAttachmentHandle = GenerateDepthTex2D(app->displaySize);
 
 	ret.handle;
 	glGenFramebuffers(1, &ret.handle);
 	glBindFramebuffer(GL_FRAMEBUFFER, ret.handle);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ret.colorAttachment0Handle, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, ret.colorAttachment1Handle, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, ret.colorAttachment2Handle, 0);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, ret.colorAttachment3Handle, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ret.colorAttachment0Handle, 0); //Albedo
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, ret.colorAttachment1Handle, 0); //Normal
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, ret.colorAttachment2Handle, 0); //Position
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, ret.colorAttachment3Handle, 0); //Radiance
+
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, ret.depthAttachmentHandle, 0);
 
@@ -1225,6 +1230,22 @@ GLuint GenerateColTex2D(vec2 displaySize)
 	glGenTextures(1, &ret);
 	glBindTexture(GL_TEXTURE_2D, ret);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, displaySize.x, displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return ret;
+}
+GLuint GenerateColTex2DHighPrecision(vec2 displaySize)
+{
+	GLuint ret;
+	glGenTextures(1, &ret);
+	glBindTexture(GL_TEXTURE_2D, ret);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, displaySize.x, displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 

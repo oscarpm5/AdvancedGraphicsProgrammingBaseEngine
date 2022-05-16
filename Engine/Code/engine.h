@@ -269,7 +269,7 @@ struct App
 
 	// Location of the texture uniform in the textured quad shader
 	GLuint programUniformTexture;
-
+	GLuint programUniformIsDepth;
 	// Location of the texture uniform in the textured mesh shader
 	GLuint texturedMeshProgram_uTexture;
 
@@ -341,7 +341,7 @@ void GeometryPass(App* app);
 
 void LightPass(App* app);
 
-void RenderTextureToScreen(App* app, GLuint textureHandle);
+void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth);
 
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 
@@ -369,5 +369,7 @@ Light* CreatePointLight(App* app, vec3 color, vec3 position);
 Framebuffer GenerateFrameBuffer(App* app);
 
 GLuint GenerateColTex2D(vec2 displaySize);
+
+GLuint GenerateColTex2DHighPrecision(vec2 displaySize);
 
 GLuint GenerateDepthTex2D(vec2 displaySize);
