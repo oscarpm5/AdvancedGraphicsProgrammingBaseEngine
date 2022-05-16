@@ -338,6 +338,8 @@ void GeometryPass(App* app);
 
 void LightPass(App* app);
 
+void RenderTextureToScreen(App* app, GLuint textureHandle);
+
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);

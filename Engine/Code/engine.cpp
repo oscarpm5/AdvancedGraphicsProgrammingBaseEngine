@@ -697,6 +697,7 @@ void DeferredRender(App* app)
 {
 	GeometryPass(app);
 	LightPass(app);
+	RenderTextureToScreen(app, app->testFramebuffer.colorAttachment3Handle);
 }
 
 void GeometryPass(App* app)
@@ -790,8 +791,8 @@ void LightPass(App* app)
 
 
 	//TODO push sphere lights as geometry
-	
-	
+
+
 	//render quad
 	Mesh& mesh = app->meshes[app->screenQuad];
 
@@ -817,6 +818,38 @@ void LightPass(App* app)
 
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderTextureToScreen(App* app, GLuint textureHandle)
+{
+	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
+	glUseProgram(texturedGeometryProgram.handle);
+
+	Mesh& mesh = app->meshes[app->screenQuad];
+
+
+	GLuint vao = FindVAO(mesh, 0, texturedGeometryProgram);
+	glBindVertexArray(vao);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureHandle);
+	glUniform1i(app->programUniformTexture, 0);
+
+	Submesh& submesh = mesh.submeshes[0];
+	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
 }
 
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
