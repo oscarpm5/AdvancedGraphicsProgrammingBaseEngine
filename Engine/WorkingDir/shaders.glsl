@@ -197,3 +197,61 @@ void main()
 
 #endif
 #endif
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+#ifdef LIGTHTING_PASS
+
+struct Light
+{
+	unsigned int type;
+	vec3 color;
+	vec3 direction;
+	vec3 position;
+};
+
+
+#if defined(VERTEX) ///////////////////////////////////////////////////
+
+// TODO: Write your vertex shader here
+layout(location=0) in vec3 aPosition;
+
+layout( binding = 1, std140) uniform LocalParams
+{
+	mat4 uWorldMatrix;
+	mat4 uWorldViewProjectionMatrix;
+};
+
+
+void main()
+{
+	gl_Position = uWorldViewProjectionMatrix*vec4(aPosition,1.0);
+}
+
+#elif defined(FRAGMENT) ///////////////////////////////////////////////
+
+// TODO: Write your fragment shader here
+
+layout( binding = 0, std140) uniform GlobalParams
+{
+	vec3 uCameraPosition;
+	unsigned int uLightCount;
+	Light uLight[16];
+};
+
+
+uniform sampler2D uAlbedo;
+uniform sampler2D uNormal;
+uniform sampler2D uPosition;
+
+layout(location=3) out vec4 oRadiance;
+
+void main()
+{
+	oRadiance = uAlbedo;
+}
+
+
+#endif
+#endif

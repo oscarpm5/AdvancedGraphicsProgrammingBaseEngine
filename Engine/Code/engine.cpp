@@ -282,6 +282,12 @@ void Init(App* app)
 	Program& deferredGeometryIdx = app->programs[app->deferredGeometryProgramIdx];
 	app->deferredGeometry_uTexture = glGetUniformLocation(deferredGeometryIdx.handle, "uTexture");
 
+	app->deferredLightProgramIdx = LoadProgram(app, "shaders.glsl", "LIGTHTING_PASS");
+	Program& deferredLightingIdx = app->programs[app->deferredLightProgramIdx];
+	app->deferredLighting_uAlbedo = glGetUniformLocation(deferredLightingIdx.handle, "uAlbedo");
+	app->deferredLighting_uNormal = glGetUniformLocation(deferredLightingIdx.handle, "uNormal");
+	app->deferredLighting_uPosition = glGetUniformLocation(deferredLightingIdx.handle, "uPosition");
+
 	
 	
 	//Texture
@@ -697,6 +703,7 @@ void DeferredRender(App* app)
 void GeometryPass(App* app)
 {
 	glEnable(GL_CULL_FACE);
+	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 
 	//Render on this framebuffer render targets
@@ -758,7 +765,27 @@ void GeometryPass(App* app)
 
 void LightPass(App* app)
 {
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
 
+	//Render on this framebuffer render targets
+	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
+
+	//Select on which render targets to draw
+	GLuint drawbuffers[] = {
+		GL_COLOR_ATTACHMENT3, //radiance, illuminated scene
+	};
+	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
+
+	Program& deferredlightProgram = app->programs[app->deferredLightProgramIdx];
+	glUseProgram(deferredlightProgram.handle);
+
+	//TODO push sphere lights as geometry
+	//TODO render quad
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
