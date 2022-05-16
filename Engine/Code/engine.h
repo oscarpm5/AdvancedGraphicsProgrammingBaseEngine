@@ -331,6 +331,8 @@ void Gui(App* app);
 
 void Update(App* app);
 
+void HandleCameraMove(App* app);
+
 void Render(App* app);
 
 void DeferredRender(App* app);

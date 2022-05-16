@@ -447,6 +447,8 @@ void Update(App* app)
 		app->showGlInfoWindow = !app->showGlInfoWindow;
 	}
 
+	HandleCameraMove(app);
+
 
 	// You can handle app->input keyboard/mouse here
 
@@ -516,6 +518,60 @@ void Update(App* app)
 
 
 
+}
+
+void HandleCameraMove(App* app)
+{
+	float speed=10.0f;
+	float speedMult = 3.0f;
+	
+	if (app->input.keys[Key::K_SPACE] == ButtonState::BUTTON_PRESSED)
+	{
+		speed *= speedMult;
+	}
+
+
+	float horizontalMove=0.0f;
+	float verticalMove = 0.0f;
+	float forwardMove = 0.0f;
+
+	if (app->input.keys[Key::K_D] == ButtonState::BUTTON_PRESSED)
+	{
+		horizontalMove += 1;
+	}
+	if (app->input.keys[Key::K_A] == ButtonState::BUTTON_PRESSED)
+	{
+		horizontalMove += -1;
+	}
+
+	if (app->input.keys[Key::K_E] == ButtonState::BUTTON_PRESSED)
+	{
+		verticalMove += 1;
+	}
+	if (app->input.keys[Key::K_Q] == ButtonState::BUTTON_PRESSED)
+	{
+		verticalMove += -1;
+	}
+
+	if (app->input.keys[Key::K_W] == ButtonState::BUTTON_PRESSED)
+	{
+		forwardMove += 1;
+	}
+	if (app->input.keys[Key::K_S] == ButtonState::BUTTON_PRESSED)
+	{
+		forwardMove += -1;
+	}
+	
+
+	vec3 forwardVec = glm::normalize(-app->cam.position);
+	vec3 rightVec = glm::normalize(glm::cross(forwardVec, vec3(0.0f, 1.0f, 0.0f)));
+	vec3 vericalVec = glm::normalize(glm::cross(rightVec, forwardVec));
+
+	app->cam.position += forwardVec * forwardMove * speed * app->deltaTime;
+	app->cam.position += vericalVec * verticalMove * speed * app->deltaTime;
+	app->cam.position += rightVec * horizontalMove * speed * app->deltaTime;
+
+	app->cam.UpdateMatrices();
 }
 
 void Render(App* app)
