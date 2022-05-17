@@ -260,7 +260,7 @@ void Init(App* app)
 	{
 		app->glInfo.extensions.push_back(MakeString((const char*)glGetStringi(GL_EXTENSIONS, GLuint(i))));
 	}
-	app->showGlInfoWindow = false;
+	app->showGlInfoWindow = true;
 
 	// TODO: Initialize your resources here!
 	// - vertex buffers
@@ -339,7 +339,7 @@ void Init(App* app)
 	u32 currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
 	app->entities[currentEntity].position = vec3(-1.5f, 0.5f, 1.0f);
 	app->entities[currentEntity].scale = vec3(0.6f);
-	app->entities[currentEntity].rotation = vec3(0.0f,180.0f,0.0f);
+	app->entities[currentEntity].rotation = vec3(0.0f, 180.0f, 0.0f);
 
 	currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
 	app->entities[currentEntity].position = vec3(1.5f, 0.5f, 1.0f);
@@ -372,8 +372,10 @@ void Init(App* app)
 	app->testFramebuffer = GenerateFrameBuffer(app);
 
 
-
+	app->renderLightMeshes = true;
 }
+
+
 
 float RandSph()
 {
@@ -386,7 +388,14 @@ void Gui(App* app)
 
 
 	ImGui::Begin("Info");
-	ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
+	ImGui::TextWrapped("FPS: %f", 1.0f / app->deltaTime);
+	ImGui::TextWrapped("CONTROLS:");
+	ImGui::Indent();
+	ImGui::TextWrapped("WASDQE			-> Orbit");
+	ImGui::TextWrapped("SPACE (HOLD)	-> Orbit Multiplier");
+	ImGui::Unindent();
+	ImGui::TextWrapped("If the ROOM model or Patrick model do not show properly, check that they are included in their own folder inside the Working Directory. (E.g. WorkingDir/Patrick/Patrick.obj).");
+
 	ImGui::End();
 
 	if (app->showGlInfoWindow)
@@ -407,8 +416,10 @@ void Gui(App* app)
 	}
 
 	{
+		ImGui::Checkbox("Display Light Debug Meshes", &app->renderLightMeshes);
+
 		static int current_draw_mode = 3;
-		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Radiance\0Depth\0\0"))
+		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Final\0Depth\0\0"))
 		{
 			app->displayMode = current_draw_mode;
 		}
@@ -435,11 +446,11 @@ void Gui(App* app)
 			AddEntity(app, "Room", app->modelRoom);
 		}
 
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_CollapsingHeader;
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_CollapsingHeader | ImGuiTreeNodeFlags_Leaf;
 		if (ImGui::CollapsingHeader("Entities", flags))
 		{
 			ImGui::Indent();
-			static int selected = -1;
+			static int selected = 0;
 			for (int n = 0; n < app->entities.size(); ++n)
 			{
 				char buf[32];
@@ -449,43 +460,47 @@ void Gui(App* app)
 			}
 			ImGui::Unindent();
 
-			if (selected != -1)
+
+			char buf[128];
+			sprintf(buf, "Transform: %s##%d", app->entities[selected].name.str, app->entities[selected].id);
+			if (ImGui::CollapsingHeader(buf, flags))
 			{
-				char buf[128];
-				sprintf(buf, "Transform: %s##%d", app->entities[selected].name.str, app->entities[selected].id);
-				if (ImGui::CollapsingHeader(buf, flags))
+				bool hasToUpdateMatrix = false;
+				float entityPos[3] = { app->entities[selected].position.x, app->entities[selected].position.y, app->entities[selected].position.z };
+				if (ImGui::DragFloat3("Position", entityPos))
 				{
-					bool hasToUpdateMatrix = false;
-					float entityPos[3] = { app->entities[selected].position.x, app->entities[selected].position.y, app->entities[selected].position.z };
-					if (ImGui::DragFloat3("Position", entityPos))
-					{
-						app->entities[selected].position.x = entityPos[0];
-						app->entities[selected].position.y = entityPos[1];
-						app->entities[selected].position.z = entityPos[2];
-						hasToUpdateMatrix = true;
-					}
-					float entityRot[3] = { app->entities[selected].rotation.x, app->entities[selected].rotation.y, app->entities[selected].rotation.z };
-					if (ImGui::DragFloat3("Rotation", entityRot))
-					{
-						app->entities[selected].rotation.x = entityRot[0];
-						app->entities[selected].rotation.y = entityRot[1];
-						app->entities[selected].rotation.z = entityRot[2];
-						hasToUpdateMatrix = true;
-					}
-					float entityScale[3] = { app->entities[selected].scale.x, app->entities[selected].scale.y, app->entities[selected].scale.z };
-					if (ImGui::DragFloat3("Scale", entityScale))
-					{
-						app->entities[selected].scale.x = entityScale[0];
-						app->entities[selected].scale.y = entityScale[1];
-						app->entities[selected].scale.z = entityScale[2];
-						hasToUpdateMatrix = true;
-					}
-
-
-					if (hasToUpdateMatrix)
-						app->entities[selected].UpdateWorldMatrix();
+					app->entities[selected].position.x = entityPos[0];
+					app->entities[selected].position.y = entityPos[1];
+					app->entities[selected].position.z = entityPos[2];
+					hasToUpdateMatrix = true;
 				}
+				float entityRot[3] = { app->entities[selected].rotation.x, app->entities[selected].rotation.y, app->entities[selected].rotation.z };
+				if (ImGui::DragFloat3("Rotation", entityRot))
+				{
+					app->entities[selected].rotation.x = entityRot[0];
+					app->entities[selected].rotation.y = entityRot[1];
+					app->entities[selected].rotation.z = entityRot[2];
+					hasToUpdateMatrix = true;
+				}
+				float entityScale[3] = { app->entities[selected].scale.x, app->entities[selected].scale.y, app->entities[selected].scale.z };
+				if (ImGui::DragFloat3("Scale", entityScale))
+				{
+					app->entities[selected].scale.x = entityScale[0];
+					app->entities[selected].scale.y = entityScale[1];
+					app->entities[selected].scale.z = entityScale[2];
+					hasToUpdateMatrix = true;
+				}
+
+
+				if (hasToUpdateMatrix)
+					app->entities[selected].UpdateWorldMatrix();
 			}
+
+			if (ImGui::Button("Delete Entity"))
+			{
+				app->entities.erase(app->entities.begin() + selected);
+			}
+
 		}
 
 
@@ -645,194 +660,19 @@ void HandleCameraMove(App* app)
 
 void Render(App* app)
 {
-	if (true)//TODO just for now
-	{
-		DeferredRender(app);
-		return;
-	}
-
-
-	//Render on this framebuffer render targets
-	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
-
-	//Select on which render targets to draw
-	GLuint drawbuffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
-	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
-
-
-	// - set the viewport
-	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
-
-	// - clear the framebuffer
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-
-
-	switch (app->mode)
-	{
-	case Mode_TexturedQuad:
-	{
-		//// - bind the program 
-		//Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-		//glUseProgram(texturedGeometryProgram.handle);
-		//// - bind the vao
-		//glBindVertexArray(app->vao);
-
-		//// - set the blending state
-		//glEnable(GL_BLEND);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		////   (...and make its texture sample from unit 0)
-		//glUniform1i(app->programUniformTexture, 0);
-		//glActiveTexture(GL_TEXTURE0);
-		//// - bind the texture into unit 0
-		//GLuint textureHandle = app->textures[app->diceTexIdx].handle;
-		//glBindTexture(GL_TEXTURE_2D, textureHandle);
-
-		//// - glDrawElements() !!!
-		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
-
-		////unbind
-		//glBindVertexArray(0);
-		//glUseProgram(0);
-
-		glEnable(GL_CULL_FACE);
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-		glUseProgram(texturedGeometryProgram.handle);
-
-		Mesh& mesh = app->meshes[app->screenQuad];
-
-		for (u32 i = 0; i < mesh.submeshes.size(); ++i)
-		{
-			GLuint vao = FindVAO(mesh, i, texturedGeometryProgram);
-			glBindVertexArray(vao);
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, app->textures[app->diceTexIdx].handle);
-			glUniform1i(app->programUniformTexture, 0);
-
-			Submesh& submesh = mesh.submeshes[i];
-			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-		}
-		glBindVertexArray(0);
-		glUseProgram(0);
-	}
-	break;
-	case Mode_Count:
-	{
-
-		glEnable(GL_CULL_FACE);
-		glEnable(GL_DEPTH_TEST);
-
-
-		Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-		glUseProgram(texturedMeshProgram.handle);
-		glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalParamsSize); //Only once as is used for each object
-
-
-		for (int n = 0; n < app->entities.size(); ++n)
-		{
-
-			Model& model = app->models[app->entities[n].modelIndex];
-			Mesh& mesh = app->meshes[model.meshIdx];
-
-			for (u32 i = 0; i < mesh.submeshes.size(); ++i)
-			{
-				GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
-				glBindVertexArray(vao);
-
-				u32 submeshMaterialIdx = model.materialIdx[i];
-				Material& submeshMaterial = app->materials[submeshMaterialIdx];
-
-
-				glUniform1i(app->texturedMeshProgram_uTexture, 0);
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-
-				glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
-				//glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalParamsSize);
-
-
-				Submesh& submesh = mesh.submeshes[i];
-				glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-			}
-
-		}
-		//TODO consider puting this code into a method that takes a mesh or a model and a program and draws things
-		/*mesh = app->meshes[app->sphereMesh];
-		for (u32 i = 0; i < mesh.submeshes.size(); ++i)
-		{
-			GLuint vao = FindVAO(mesh, i, texturedMeshProgram);
-			glBindVertexArray(vao);
-
-			u32 submeshMaterialIdx = model.materialIdx[i];
-			Material& submeshMaterial = app->materials[submeshMaterialIdx];
-
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, app->textures[app->diceTexIdx].handle);
-			glUniform1i(app->texturedMeshProgram_uTexture, 0);
-
-			Submesh& submesh = mesh.submeshes[i];
-			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-		}*/
-
-		glBindVertexArray(0);
-		glUseProgram(0);
-
-	}
-	break;
-
-	default:;
-	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-	//2nd pass render fbo to screen TODO change
-
-	// - clear the framebuffer
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glEnable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-	glUseProgram(texturedGeometryProgram.handle);
-
-	Mesh& mesh = app->meshes[app->screenQuad];
-
-	for (u32 i = 0; i < mesh.submeshes.size(); ++i)
-	{
-		GLuint vao = FindVAO(mesh, i, texturedGeometryProgram);
-		glBindVertexArray(vao);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment0Handle);
-		glUniform1i(app->programUniformTexture, 0);
-
-		Submesh& submesh = mesh.submeshes[i];
-		glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-	}
-	glBindVertexArray(0);
-	glUseProgram(0);
-
+	DeferredRender(app);
 }
 
 void DeferredRender(App* app)
 {
 	GeometryPass(app);
 	LightPass(app);
-	RenderLightMeshes(app);
+
+	if (app->renderLightMeshes == true)
+	{
+		RenderLightMeshes(app);
+	}
+
 
 	RenderTextureToScreen(app, GetDisplayTexture(app), app->displayMode == 4 ? true : false);
 }
@@ -919,7 +759,7 @@ void GeometryPass(App* app)
 			glUniform1i(app->deferredGeometry_uTexture, 0);
 			Material& submeshMaterial = app->materials[submeshMaterialIdx];
 			glActiveTexture(GL_TEXTURE0);
-			
+
 			if (submeshMaterial.albedoTextureIdx != UINT32_MAX)
 			{
 				glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
@@ -929,7 +769,7 @@ void GeometryPass(App* app)
 				glBindTexture(GL_TEXTURE_2D, app->textures[app->whiteTexIdx].handle);
 			}
 
-			
+
 
 			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
 
@@ -1384,7 +1224,6 @@ u32 AddDirectionalLightEntity(App* app, vec3 direction, vec3 scale, float offset
 	toAdd.rotation = glm::eulerAngles(glm::quatLookAt(direction, vec3(0.0, 1.0, 0.0)));
 	toAdd.rotation = glm::degrees(toAdd.rotation);
 	toAdd.UpdateWorldMatrix();
-	//toAdd.worldMatrix *= glm::mat4_cast(glm::quatLookAt(glm::normalize(vec3(direction.z,direction.x,direction.y)), vec3(0, -1, 0)));
 
 
 	app->lightEntities.push_back(toAdd);
@@ -1400,8 +1239,7 @@ Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 	l.type = LightType::LightType_Directional;
 	l.position = vec3(0.0, 0.0, 0.0);
 	AddDirectionalLightEntity(app, l.direction, vec3(1.0f), 10.0f);
-	//float directionalLightOffset = 5.0f;//TODO make global?
-	//worldMatrix = glm::lookAt(-light.direction* directionalLightOffset, vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
+
 
 	app->lights.push_back(l);
 
@@ -1523,93 +1361,6 @@ GLuint GenerateDepthTex2D(vec2 displaySize)
 	return ret;
 }
 
-/*
-Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess, std::vector<u32> indicesToProess)
-{
-	std::vector<float> vertices;
-	std::vector<u32> indices;
-
-	bool hasTexCoords = false;
-	bool hasTangentSpace = false;
-
-	// process vertices
-	for (unsigned int i = 0; i < verticesToProcess.size(); i++)
-	{
-		vertices.push_back(mesh->mVertices[i].x);
-		vertices.push_back(mesh->mVertices[i].y);
-		vertices.push_back(mesh->mVertices[i].z);
-		vertices.push_back(mesh->mNormals[i].x);
-		vertices.push_back(mesh->mNormals[i].y);
-		vertices.push_back(mesh->mNormals[i].z);
-
-		if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
-		{
-			hasTexCoords = true;
-			vertices.push_back(mesh->mTextureCoords[0][i].x);
-			vertices.push_back(mesh->mTextureCoords[0][i].y);
-		}
-
-		if (mesh->mTangents != nullptr && mesh->mBitangents)
-		{
-			hasTangentSpace = true;
-			vertices.push_back(mesh->mTangents[i].x);
-			vertices.push_back(mesh->mTangents[i].y);
-			vertices.push_back(mesh->mTangents[i].z);
-
-			// For some reason ASSIMP gives me the bitangents flipped.
-			// Maybe it's my fault, but when I generate my own geometry
-			// in other files (see the generation of standard assets)
-			// and all the bitangents have the orientation I expect,
-			// everything works ok.
-			// I think that (even if the documentation says the opposite)
-			// it returns a left-handed tangent space matrix.
-			// SOLUTION: I invert the components of the bitangent here.
-			vertices.push_back(-mesh->mBitangents[i].x);
-			vertices.push_back(-mesh->mBitangents[i].y);
-			vertices.push_back(-mesh->mBitangents[i].z);
-		}
-	}
-
-	// process indices
-	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
-	{
-		aiFace face = mesh->mFaces[i];
-		for (unsigned int j = 0; j < face.mNumIndices; j++)
-		{
-			indices.push_back(face.mIndices[j]);
-		}
-	}
-
-	// store the proper (previously proceessed) material for this mesh
-	submeshMaterialIndices.push_back(baseMeshMaterialIndex + mesh->mMaterialIndex);
-
-	// create the vertex format
-	VertexBufferLayout vertexBufferLayout = {};
-	vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 0, 3, 0 });
-	vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 1, 3, 3 * sizeof(float) });
-	vertexBufferLayout.stride = 6 * sizeof(float);
-	if (hasTexCoords)
-	{
-		vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 2, 2, vertexBufferLayout.stride });
-		vertexBufferLayout.stride += 2 * sizeof(float);
-	}
-	if (hasTangentSpace)
-	{
-		vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 3, 3, vertexBufferLayout.stride });
-		vertexBufferLayout.stride += 3 * sizeof(float);
-
-		vertexBufferLayout.attributes.push_back(VertexBufferAttribute{ 4, 3, vertexBufferLayout.stride });
-		vertexBufferLayout.stride += 3 * sizeof(float);
-	}
-
-	// add the submesh into the mesh
-	Submesh submesh = {};
-	submesh.vertexBufferLayout = vertexBufferLayout;
-	submesh.vertices.swap(vertices);
-	submesh.indices.swap(indices);
-	myMesh->submeshes.push_back(submesh);
-}
-*/
 //Once we have the mesh with its submeshes, we can construct its data
 void Mesh::GenerateMeshData(App* app)
 {

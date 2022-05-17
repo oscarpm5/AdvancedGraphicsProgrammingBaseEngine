@@ -312,6 +312,9 @@ struct App
 	
 	//Texture Display mode
 	u32 displayMode;
+
+	//Debug
+	bool renderLightMeshes;
 };
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName);
