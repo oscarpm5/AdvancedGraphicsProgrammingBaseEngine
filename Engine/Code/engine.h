@@ -243,6 +243,7 @@ struct App
 
 
 	std::vector<Entity> entities;
+	std::vector<Entity> lightEntities;
 
 	// program indices
 	u32 texturedGeometryProgramIdx;
@@ -250,6 +251,7 @@ struct App
 
 	u32 deferredGeometryProgramIdx;
 	u32 deferredLightProgramIdx;
+	u32 deferredLightMeshProgramIdx;
 
 	// texture indices
 	u32 diceTexIdx;
@@ -281,6 +283,9 @@ struct App
 	GLuint deferredLighting_uNormal;
 	GLuint deferredLighting_uPosition;
 
+	//Location of the texture uniforms in the deferred light mesh shader
+	GLuint deferredLightMesh_uTexture;
+
 
 	//Patrick Model
 	GLuint model;
@@ -288,14 +293,6 @@ struct App
 
 	GLint maxUniformBufferSize;
 	GLint uniformBlockAlignment;
-
-
-
-	GLuint bufferHandle;
-
-
-
-
 
 	Camera cam;
 
@@ -305,7 +302,7 @@ struct App
 	Buffer lBuffer;//local buffers
 	Buffer cBuffer;//common buffers
 	u32 globalParamsoffset;
-	u32 globalparamsSize;
+	u32 globalParamsSize;
 
 	Framebuffer testFramebuffer;
 	

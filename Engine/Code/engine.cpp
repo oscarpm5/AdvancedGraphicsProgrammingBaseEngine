@@ -291,6 +291,11 @@ void Init(App* app)
 	app->deferredLighting_uPosition = glGetUniformLocation(deferredLightingIdx.handle, "uPosition");
 
 
+	app->deferredLightMeshProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHT_MESH_PASS");
+	Program& deferredLightMeshIdx = app->programs[app->deferredLightMeshProgramIdx];
+	app->deferredLightMesh_uTexture = glGetUniformLocation(deferredLightMeshIdx.handle, "uTexture");
+
+
 
 	//Texture
 	app->diceTexIdx = LoadTexture2D(app, "dice.png");
@@ -339,6 +344,9 @@ void Init(App* app)
 	CreateDirectionalLight(app, vec3(0.5, 0.0, 0.5), vec3(1.0, -1.0, -1.0));
 
 	app->testFramebuffer = GenerateFrameBuffer(app);
+
+
+
 }
 
 void Gui(App* app)
@@ -489,23 +497,38 @@ void Update(App* app)
 		PushVec3(app->cBuffer, light.color);
 		PushVec3(app->cBuffer, light.direction);
 		PushVec3(app->cBuffer, light.position);
+		PushMat4(app->cBuffer, light.worldTransform);
 
 	}
 
-	app->globalparamsSize = app->cBuffer.head - app->globalParamsoffset;
+	app->globalParamsSize = app->cBuffer.head - app->globalParamsoffset;
 
 	UnmapBuffer(app->cBuffer);
 
 	//Local buffer
 	MapBuffer(app->lBuffer, GL_WRITE_ONLY);
 
-	for (u32 i = 0; i < app->entities.size(); ++i)
+	for (u32 i = 0; i < app->entities.size(); ++i) //Normal entities
 	{
 		AlignHead(app->lBuffer, app->uniformBlockAlignment);
 		Entity& entity = app->entities[i];
 
 		entity.UpdateWorldMatrix();
 
+
+		entity.localParamsOffset = app->lBuffer.head;
+		PushMat4(app->lBuffer, entity.worldMatrix);
+		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * entity.worldMatrix);
+		entity.localParamsSize = app->lBuffer.head - entity.localParamsOffset;
+
+	}
+
+	for (u32 i = 0; i < app->lightEntities.size(); ++i) //Light Mesh entities
+	{
+		AlignHead(app->lBuffer, app->uniformBlockAlignment);
+		Entity& entity = app->lightEntities[i];
+
+		entity.UpdateWorldMatrix();
 
 		entity.localParamsOffset = app->lBuffer.head;
 		PushMat4(app->lBuffer, entity.worldMatrix);
@@ -522,16 +545,16 @@ void Update(App* app)
 
 void HandleCameraMove(App* app)
 {
-	float speed=10.0f;
+	float speed = 10.0f;
 	float speedMult = 3.0f;
-	
+
 	if (app->input.keys[Key::K_SPACE] == ButtonState::BUTTON_PRESSED)
 	{
 		speed *= speedMult;
 	}
 
 
-	float horizontalMove=0.0f;
+	float horizontalMove = 0.0f;
 	float verticalMove = 0.0f;
 	float forwardMove = 0.0f;
 
@@ -561,7 +584,7 @@ void HandleCameraMove(App* app)
 	{
 		forwardMove += -1;
 	}
-	
+
 
 	vec3 forwardVec = glm::normalize(-app->cam.position);
 	vec3 rightVec = glm::normalize(glm::cross(forwardVec, vec3(0.0f, 1.0f, 0.0f)));
@@ -665,7 +688,7 @@ void Render(App* app)
 
 		Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 		glUseProgram(texturedMeshProgram.handle);
-		glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalparamsSize); //Only once as is used for each object
+		glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalParamsSize); //Only once as is used for each object
 
 
 		for (int n = 0; n < app->entities.size(); ++n)
@@ -688,7 +711,7 @@ void Render(App* app)
 				glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
 
 				glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
-				//glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalparamsSize);
+				//glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalParamsSize);
 
 
 				Submesh& submesh = mesh.submeshes[i];
@@ -764,7 +787,7 @@ void DeferredRender(App* app)
 	GeometryPass(app);
 	LightPass(app);
 
-	RenderTextureToScreen(app, GetDisplayTexture(app), app->displayMode == 4 ? true:false);
+	RenderTextureToScreen(app, GetDisplayTexture(app), app->displayMode == 4 ? true : false);
 }
 
 GLuint GetDisplayTexture(App* app)
@@ -805,8 +828,8 @@ GLuint GetDisplayTexture(App* app)
 void GeometryPass(App* app)
 {
 	glEnable(GL_CULL_FACE);
-	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_TRUE);
 
 	//Render on this framebuffer render targets
 	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
@@ -886,7 +909,7 @@ void LightPass(App* app)
 	Program& deferredlightProgram = app->programs[app->deferredLightProgramIdx];
 	glUseProgram(deferredlightProgram.handle);
 
-	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalparamsSize); //Only once as is used for each object
+	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalParamsSize); //Only once as is used for each object
 
 
 	//TODO push sphere lights as geometry
@@ -914,6 +937,58 @@ void LightPass(App* app)
 
 	glBindVertexArray(0);
 	glUseProgram(0);
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void RenderLightMeshes(App* app)
+{
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+
+	//Render on this framebuffer render targets
+	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
+
+	//Select on which render targets to draw
+	GLuint drawbuffers[] = {
+		GL_COLOR_ATTACHMENT0 //Albedo
+	};
+	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
+
+	Program& deferredLightMeshProgram = app->programs[app->deferredLightMeshProgramIdx];
+	glUseProgram(deferredLightMeshProgram.handle);
+
+
+	//Render point lights
+	for (int n = 0; n < app->lights.size(); ++n)
+	{
+
+		Mesh& mesh = app->meshes[app->sphereMesh];
+
+		for (u32 i = 0; i < mesh.submeshes.size(); ++i)
+		{
+			GLuint vao = FindVAO(mesh, i, deferredLightMeshProgram);
+			glBindVertexArray(vao);
+
+
+			glUniform1i(app->deferredLightMesh_uTexture, 0);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, app->textures[app->whiteTexIdx].handle);
+
+			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
+
+
+			Submesh& submesh = mesh.submeshes[i];
+			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+		}
+
+	}
+
+
+
+	//Render directional lights
+	glDisable(GL_CULL_FACE);
 
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1209,6 +1284,12 @@ u32 AddEntity(App* app, const char* name, u32 modelIndex)
 	return app->entities.size() - 1;
 }
 
+
+u32 AddPointLightEntity(App* app, vec3 position, vec3 scale)
+{
+
+}
+
 Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 {
 	Light l;
@@ -1216,7 +1297,15 @@ Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 	l.direction = direction;
 	l.type = LightType::LightType_Directional;
 	l.position = vec3(0.0, 0.0, 0.0);
+
+
+	//float directionalLightOffset = 5.0f;//TODO make global?
+	//worldMatrix = glm::lookAt(-light.direction* directionalLightOffset, vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
+
+	l.worldTransform = glm::translate(l.direction);
 	app->lights.push_back(l);
+
+
 
 	return &app->lights.back();
 }
@@ -1228,6 +1317,7 @@ Light* CreatePointLight(App* app, vec3 color, vec3 position)
 	l.direction = vec3(0.0, 0.0, 0.0);
 	l.type = LightType::LightType_Point;
 	l.position = position;
+	l.worldTransform = glm::translate(l.position);
 	app->lights.push_back(l);
 
 	return &app->lights.back();

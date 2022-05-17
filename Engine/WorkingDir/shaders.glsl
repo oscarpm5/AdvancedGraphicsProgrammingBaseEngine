@@ -281,3 +281,53 @@ void main()
 
 #endif
 #endif
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef LIGHT_MESH_PASS
+
+#if defined(VERTEX) ///////////////////////////////////////////////////
+
+// TODO: Write your vertex shader here
+layout(location=0) in vec3 aPosition;
+layout(location=1) in vec3 aNormal;
+layout(location=2) in vec2 aTexCoord;
+
+layout( binding = 1, std140) uniform LocalParams
+{
+	mat4 uWorldMatrix;
+	mat4 uWorldViewProjectionMatrix;
+};
+
+
+out vec2 vTexCoord;
+out vec3 vPosition; //In WorldSpace
+
+void main()
+{
+	vTexCoord = aTexCoord;
+	vPosition = vec3(uWorldMatrix*vec4(aPosition,1.0));
+
+	gl_Position = uWorldViewProjectionMatrix*vec4(aPosition,1.0);
+}
+
+#elif defined(FRAGMENT) ///////////////////////////////////////////////
+
+// TODO: Write your fragment shader here
+in vec2 vTexCoord;
+in vec3 vPosition;
+
+
+
+uniform sampler2D uTexture;
+
+layout(location=0) out vec4 oColor;
+
+void main()
+{
+	oColor = texture(uTexture,vTexCoord);
+}
+
+
+#endif
+#endif
