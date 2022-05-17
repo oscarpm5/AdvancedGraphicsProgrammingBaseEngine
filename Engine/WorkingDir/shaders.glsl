@@ -173,7 +173,7 @@ out vec2 vTexCoord;
 void main()
 {
 	vPosition = vec3(uWorldMatrix*vec4(aPosition,1.0));
-	vNormal = vec3(uWorldMatrix*vec4(aNormal,0.0));
+	vNormal = vec3(uWorldMatrix*vec4(normalize(aNormal),0.0));
 	vTexCoord = aTexCoord;
 
 	gl_Position = uWorldViewProjectionMatrix*vec4(aPosition,1.0);
@@ -197,7 +197,7 @@ layout(location=2) out vec4 oPosition;
 void main()
 {
 	oAlbedo = texture(uTexture,vTexCoord);
-	oNormal = vec4(vNormal,1.0);
+	oNormal = vec4(normalize(vNormal),1.0);
 	oPosition = vec4(vPosition,1.0);
 	
 }
@@ -270,13 +270,12 @@ void main()
 
 			vec3 reflectDir = reflect(l.direction,normal);
 			float spec = pow(max(dot(viewDir, reflectDir), 0.0), 25);
-			lightColor += spec* l.color * 2.0;
 
 
 			if(l.type==0) //if directional light
 			{
 				float luminance = max(dot(normalize(normal),normalize(-l.direction)),0.0f);
-				lightColor += l.color * luminance;
+				lightColor += l.color * (luminance + spec);
 			}
 
 			if(l.type==1)
@@ -286,7 +285,7 @@ void main()
 
 				float luminance = max(dot(normalize(normal),normalize(l.position - position)),0.0);
 
-				lightColor += l.color *luminance *  attenuation;
+				lightColor += l.color * attenuation *(luminance  + spec);
 			}
 
 		

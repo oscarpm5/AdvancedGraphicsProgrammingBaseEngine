@@ -75,8 +75,9 @@ public:
 	void GenerateMeshData(App* app);
 };
 
-struct Material
+class Material
 {
+public:
 	std::string name;
 	vec3 albedo;
 	vec3 emissive;
@@ -87,6 +88,7 @@ struct Material
 	u32 normalsTextureIdx;
 	u32 bumpTextureIdx;
 
+	Material();
 };
 
 
@@ -286,6 +288,8 @@ struct App
 
 	//Patrick Model
 	GLuint model;
+	//Room Model
+	GLuint modelRoom;
 
 	//Models
 	GLuint quadModel;

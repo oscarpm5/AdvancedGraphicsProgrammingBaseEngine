@@ -306,6 +306,8 @@ void Init(App* app)
 	app->mode = Mode_Count;
 
 	app->model = LoadModel(app, "Patrick/Patrick.obj");
+	app->modelRoom = LoadModel(app, "Room/Room #1.obj");
+
 
 	float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
 	app->cam = Camera(60.0f, aspectRatio, 0.1f, 1000.0f);
@@ -335,11 +337,23 @@ void Init(App* app)
 	//glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	u32 currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
-	app->entities[currentEntity].position = vec3(0.0f, 0.0f, 4.0f);
+	app->entities[currentEntity].position = vec3(-1.5f, 0.5f, 1.0f);
+	app->entities[currentEntity].scale = vec3(0.6f);
+	app->entities[currentEntity].rotation = vec3(0.0f,180.0f,0.0f);
+
 	currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
-	app->entities[currentEntity].position = vec3(5.8f, 0.0f, 0.0f);
+	app->entities[currentEntity].position = vec3(1.5f, 0.5f, 1.0f);
+	app->entities[currentEntity].scale = vec3(0.6f);
+	app->entities[currentEntity].rotation = vec3(0.0f, 180.0f, 0.0f);
+
 	currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
-	app->entities[currentEntity].position = vec3(-3.5f, 0.0f, -3.5f);
+	app->entities[currentEntity].position = vec3(3.0f, 0.5f, -1.0f);
+	app->entities[currentEntity].scale = vec3(0.6f);
+	app->entities[currentEntity].rotation = vec3(0.0f, -90.0f, 0.0f);
+
+
+	currentEntity = AddEntity(app, "Room", app->modelRoom);//Add a room model
+	app->entities[currentEntity].position = vec3(0.0f, -2.0f, -0.0f);
 
 	//Lights 
 	CreateDirectionalLight(app, vec3(1.0, 0.75, 0.5), vec3(1, -1, -1));
@@ -348,9 +362,9 @@ void Init(App* app)
 
 	for (int i = 0; i < 14; i++)
 	{
-		vec3 position = glm::normalize(vec3(RandSph(), RandSph(), RandSph()))*10.0f * (1.0f - (1.0f-abs(RandSph()))* (1.0f-abs(RandSph())));
-
-		CreatePointLight(app, vec3(abs(RandSph()), abs(RandSph()), abs(RandSph()))*vec3(5.0), position); //TODO add more
+		vec3 position = glm::normalize(vec3(RandSph(), RandSph(), RandSph())) * 6.0f * (1.0f - (1.0f - abs(RandSph())) * (1.0f - abs(RandSph())));
+		vec3 color = vec3(abs(RandSph()), abs(RandSph()), abs(RandSph()));
+		CreatePointLight(app, color * vec3(3.0), position); //TODO add more
 	}
 
 
@@ -416,6 +430,10 @@ void Gui(App* app)
 		{
 			AddEntity(app, "Patrick", app->model);
 		}
+		if (ImGui::Button("Add Room"))
+		{
+			AddEntity(app, "Room", app->modelRoom);
+		}
 
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_CollapsingHeader;
 		if (ImGui::CollapsingHeader("Entities", flags))
@@ -444,6 +462,22 @@ void Gui(App* app)
 						app->entities[selected].position.x = entityPos[0];
 						app->entities[selected].position.y = entityPos[1];
 						app->entities[selected].position.z = entityPos[2];
+						hasToUpdateMatrix = true;
+					}
+					float entityRot[3] = { app->entities[selected].rotation.x, app->entities[selected].rotation.y, app->entities[selected].rotation.z };
+					if (ImGui::DragFloat3("Rotation", entityRot))
+					{
+						app->entities[selected].rotation.x = entityRot[0];
+						app->entities[selected].rotation.y = entityRot[1];
+						app->entities[selected].rotation.z = entityRot[2];
+						hasToUpdateMatrix = true;
+					}
+					float entityScale[3] = { app->entities[selected].scale.x, app->entities[selected].scale.y, app->entities[selected].scale.z };
+					if (ImGui::DragFloat3("Scale", entityScale))
+					{
+						app->entities[selected].scale.x = entityScale[0];
+						app->entities[selected].scale.y = entityScale[1];
+						app->entities[selected].scale.z = entityScale[2];
 						hasToUpdateMatrix = true;
 					}
 
@@ -840,7 +874,7 @@ GLuint GetDisplayTexture(App* app)
 
 void GeometryPass(App* app)
 {
-	glEnable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
 	glEnable(GL_BLEND);
@@ -881,12 +915,21 @@ void GeometryPass(App* app)
 			glBindVertexArray(vao);
 
 			u32 submeshMaterialIdx = model.materialIdx[i];
-			Material& submeshMaterial = app->materials[submeshMaterialIdx];
-
 
 			glUniform1i(app->deferredGeometry_uTexture, 0);
+			Material& submeshMaterial = app->materials[submeshMaterialIdx];
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+			
+			if (submeshMaterial.albedoTextureIdx != UINT32_MAX)
+			{
+				glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+			}
+			else
+			{
+				glBindTexture(GL_TEXTURE_2D, app->textures[app->whiteTexIdx].handle);
+			}
+
+			
 
 			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
 
@@ -1193,7 +1236,7 @@ void CreateQuad(App* app)
 	mesh->GenerateMeshData(app);
 }
 
-GLuint CreateModelFromMesh(App* app,GLuint meshIdx)
+GLuint CreateModelFromMesh(App* app, GLuint meshIdx)
 {
 	app->models.push_back(Model{});
 	Model& model = app->models.back();
@@ -1291,7 +1334,7 @@ glm::mat4 TransformPositionScaleRot(const glm::vec3& pos, const glm::vec3& rot, 
 	glm::mat4 rotateX = glm::rotate(glm::mat4(1.0), glm::radians(rot.x), vec3(1.0f, 0.0f, 0.0f));
 	glm::mat4 transform = glm::translate(pos);
 
-	return transform * rotateZ*rotateY*rotateX *scale;
+	return transform * rotateZ * rotateY * rotateX * scale;
 }
 
 u32 AddEntity(App* app, const char* name, u32 modelIndex)
@@ -1336,7 +1379,7 @@ u32 AddDirectionalLightEntity(App* app, vec3 direction, vec3 scale, float offset
 	toAdd.modelIndex = app->quadModel;
 	toAdd.id = rand();
 
-	toAdd.position = (-direction*offset);
+	toAdd.position = (-direction * offset);
 	toAdd.scale = scale;
 	toAdd.rotation = glm::eulerAngles(glm::quatLookAt(direction, vec3(0.0, 1.0, 0.0)));
 	toAdd.rotation = glm::degrees(toAdd.rotation);
@@ -1672,4 +1715,11 @@ glm::mat4 Entity::UpdateWorldMatrix()
 {
 	worldMatrix = TransformPositionScaleRot(position, rotation, scale);
 	return worldMatrix;
+}
+
+Material::Material()
+{
+	albedo = emissive = vec3(0.0);
+	smoothness = 0;
+	albedoTextureIdx = emissiveTextureIdx = specularTextureIdx = normalsTextureIdx = bumpTextureIdx = UINT32_MAX;
 }
