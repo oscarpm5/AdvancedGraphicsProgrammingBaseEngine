@@ -1380,10 +1380,10 @@ Framebuffer GenerateFrameBuffer(App* app)
 {
 	Framebuffer ret;
 
-	ret.colorAttachment0Handle = GenerateColTex2D(app->displaySize);
+	ret.colorAttachment0Handle = GenerateColTex2DHighPrecision(app->displaySize);
 	ret.colorAttachment1Handle = GenerateColTex2DHighPrecision(app->displaySize);
 	ret.colorAttachment2Handle = GenerateColTex2DHighPrecision(app->displaySize);
-	ret.colorAttachment3Handle = GenerateColTex2D(app->displaySize);
+	ret.colorAttachment3Handle = GenerateColTex2DHighPrecision(app->displaySize);
 
 
 	ret.depthAttachmentHandle = GenerateDepthTex2D(app->displaySize);

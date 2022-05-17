@@ -254,35 +254,45 @@ layout(location=0) out vec4 oRadiance;
 
 void main()
 {
-	vec4 albedo = texture(uAlbedo,vTexCoord);	
-	vec4 normal = texture(uNormal,vTexCoord);	
-	vec4 position = texture(uPosition,vTexCoord);	
+
+	vec3 albedo = texture(uAlbedo,vTexCoord).xyz;	
+	vec3 normal = texture(uNormal,vTexCoord).xyz;	
+	vec3 position = texture(uPosition,vTexCoord).xyz;	
 	
-	vec3 lightColor = vec3(0.0);
+	vec3 viewDir = normalize(uCameraPosition -position);
+
+	
+	vec3 lightColor = vec3(0.0,0.0,0.0);
 	for(int i = 0; i<uLightCount; ++i)
 	{
 		
 			Light l = uLight[i];
 
+			vec3 reflectDir = reflect(l.direction,normal);
+			float spec = pow(max(dot(viewDir, reflectDir), 0.0), 25);
+			lightColor += spec* l.color * 2.0;
+
+
 			if(l.type==0) //if directional light
 			{
-				float luminance = max(dot(normalize(normal.xyz),normalize(-l.direction)),0.0f);
+				float luminance = max(dot(normalize(normal),normalize(-l.direction)),0.0f);
 				lightColor += l.color * luminance;
 			}
 
 			if(l.type==1)
 			{
-				float dist = length(position.xyz-l.position);
+				float dist = length(position-l.position);
 				float attenuation = clamp(1.0/ (dist*dist),0.0,1.0);
 
-				float luminance = max(dot(normalize(normal.xyz),normalize(l.position - position.xyz)),0.0);
+				float luminance = max(dot(normalize(normal),normalize(l.position - position)),0.0);
 
 				lightColor += l.color *luminance *  attenuation;
 			}
+
 		
 	}
 
-	oRadiance =  vec4(albedo.xyz * lightColor,1.0);
+	oRadiance =  vec4(albedo * lightColor,1.0);
 
 
 
