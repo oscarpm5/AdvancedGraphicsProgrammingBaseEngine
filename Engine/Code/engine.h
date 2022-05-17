@@ -324,6 +324,8 @@ u32 LoadTexture2D(App* app, const char* filepath);
 
 void Init(App* app);
 
+float RandSph();
+
 void Gui(App* app);
 
 void Update(App* app);

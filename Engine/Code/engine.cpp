@@ -342,14 +342,28 @@ void Init(App* app)
 	app->entities[currentEntity].position = vec3(-3.5f, 0.0f, -3.5f);
 
 	//Lights 
-	//CreateDirectionalLight(app, vec3(1.0, 1.0, 1.0), vec3(1.0, 1.0, 0.0));
+	CreateDirectionalLight(app, vec3(1.0, 1.0, 0.5), vec3(1.0, -0.5, -1.0));
+	CreateDirectionalLight(app, vec3(0.5, 0.5, 1.0)*0.25f, vec3(-1.0, -0.5, 0.5));
 
-	CreatePointLight(app, vec3(0.0, 0.0, 1.0)*vec3(5.0), vec3(2.0)); //TODO add more
+
+	for (int i = 0; i < 14; i++)
+	{
+		vec3 position = glm::normalize(vec3(RandSph(), RandSph(), RandSph()))*10.0f * (1.0f - (1.0f-abs(RandSph()))* (1.0f-abs(RandSph())));
+
+		CreatePointLight(app, vec3(abs(RandSph()), abs(RandSph()), abs(RandSph()))*vec3(5.0), position); //TODO add more
+	}
+
+
 
 	app->testFramebuffer = GenerateFrameBuffer(app);
 
 
 
+}
+
+float RandSph()
+{
+	return (((float)rand() / RAND_MAX) - 0.5f) * 2.0f;
 }
 
 void Gui(App* app)
@@ -532,6 +546,7 @@ void Update(App* app)
 		entity.localParamsOffset = app->lBuffer.head;
 		PushMat4(app->lBuffer, entity.worldMatrix);
 		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * entity.worldMatrix);
+		PushVec3(app->lBuffer, app->lights[i].color);
 		entity.localParamsSize = app->lBuffer.head - entity.localParamsOffset;
 
 	}
@@ -1331,11 +1346,11 @@ Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 {
 	Light l;
 	l.color = color;
-	l.direction = direction;
+	l.direction = glm::normalize(direction);
 	l.type = LightType::LightType_Directional;
 	l.position = vec3(0.0, 0.0, 0.0);
 
-	AddDirectionalLightEntity(app, direction, vec3(1.0f), 5.0f);
+	AddDirectionalLightEntity(app, l.direction, vec3(1.0f), 10.0f);
 	//float directionalLightOffset = 5.0f;//TODO make global?
 	//worldMatrix = glm::lookAt(-light.direction* directionalLightOffset, vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 
@@ -1354,7 +1369,7 @@ Light* CreatePointLight(App* app, vec3 color, vec3 position)
 	l.type = LightType::LightType_Point;
 	l.position = position;
 
-	AddPointLightEntity(app, position, vec3(1.0f));
+	AddPointLightEntity(app, position, vec3(0.1f));
 
 	app->lights.push_back(l);
 

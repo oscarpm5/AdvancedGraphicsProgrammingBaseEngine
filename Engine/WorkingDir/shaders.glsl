@@ -266,7 +266,7 @@ void main()
 
 			if(l.type==0) //if directional light
 			{
-				float luminance = dot(normalize(normal.xyz),normalize(-l.direction));
+				float luminance = max(dot(normalize(normal.xyz),normalize(-l.direction)),0.0f);
 				lightColor += l.color * luminance;
 			}
 
@@ -275,7 +275,7 @@ void main()
 				float dist = length(position.xyz-l.position);
 				float attenuation = clamp(1.0/ (dist*dist),0.0,1.0);
 
-				float luminance = dot(normalize(normal.xyz),normalize(l.position - position.xyz));
+				float luminance = max(dot(normalize(normal.xyz),normalize(l.position - position.xyz)),0.0);
 
 				lightColor += l.color *luminance *  attenuation;
 			}
@@ -306,6 +306,7 @@ layout( binding = 1, std140) uniform LocalParams
 {
 	mat4 uWorldMatrix;
 	mat4 uWorldViewProjectionMatrix;
+	vec3 color;
 };
 
 void main()
@@ -316,12 +317,18 @@ void main()
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
 // TODO: Write your fragment shader here
+layout( binding = 1, std140) uniform LocalParams
+{
+	mat4 uWorldMatrix;
+	mat4 uWorldViewProjectionMatrix;
+	vec3 color;
+};
 
 layout(location=0) out vec4 oColor;
 
 void main()
 {
-	oColor = vec4(1.0,1.0,1.0,1.0);
+	oColor = vec4(color,1.0);
 }
 
 
