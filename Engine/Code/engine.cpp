@@ -342,9 +342,9 @@ void Init(App* app)
 	app->entities[currentEntity].position = vec3(-3.5f, 0.0f, -3.5f);
 
 	//Lights 
-	CreateDirectionalLight(app, vec3(1.0, 1.0, 0.75), vec3(0, -1, -1));
+	CreateDirectionalLight(app, vec3(1.0, 0.75, 0.5), vec3(1, -1, -1));
 	//CreateDirectionalLight(app, vec3(1.0, 1.0, 0.5), vec3(1.0, -0.5, -1.0));
-	CreateDirectionalLight(app, vec3(0.5, 0.5, 1.0)*0.25f, vec3(-1.0, 0.0, 0.5));
+	CreateDirectionalLight(app, vec3(0.5, 0.5, 1.0), vec3(-1.0, -0.5, 0.5));
 
 
 	for (int i = 0; i < 14; i++)
@@ -1282,13 +1282,13 @@ glm::mat4 TransformPositionScale(const glm::vec3& pos, const glm::vec3& scaleFac
 
 glm::mat4 TransformPositionScaleRot(const glm::vec3& pos, const glm::vec3& rot, const glm::vec3& scaleFactors)
 {
+	glm::mat4 scale = glm::scale(glm::mat4(1.0), scaleFactors);
+	glm::mat4 rotateZ = glm::rotate(glm::mat4(1.0), glm::radians(rot.z), vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 rotateY = glm::rotate(glm::mat4(1.0), glm::radians(rot.y), vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 rotateX = glm::rotate(glm::mat4(1.0), glm::radians(rot.x), vec3(1.0f, 0.0f, 0.0f));
 	glm::mat4 transform = glm::translate(pos);
-	transform = glm::scale(transform, scaleFactors);
-	transform = glm::rotate(transform, glm::radians(rot.x), vec3(1.0f, 0.0f, 0.0f));
-	transform = glm::rotate(transform, glm::radians(rot.y), vec3(0.0f, 1.0f, 0.0f));
-	transform = glm::rotate(transform, glm::radians(rot.z), vec3(0.0f, 0.0f, 1.0f));
 
-	return transform;
+	return transform * rotateZ*rotateY*rotateX *scale;
 }
 
 u32 AddEntity(App* app, const char* name, u32 modelIndex)
