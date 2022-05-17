@@ -342,9 +342,9 @@ void Init(App* app)
 	app->entities[currentEntity].position = vec3(-3.5f, 0.0f, -3.5f);
 
 	//Lights 
-	CreateDirectionalLight(app, vec3(1.0, 1.0, 1.0), vec3(1.0, 1.0, 0.0));
+	//CreateDirectionalLight(app, vec3(1.0, 1.0, 1.0), vec3(1.0, 1.0, 0.0));
 
-	CreatePointLight(app, vec3(0.5, 0.5, 0.5), vec3(2.0)); //TODO add more
+	CreatePointLight(app, vec3(0.0, 0.0, 1.0)*vec3(5.0), vec3(2.0)); //TODO add more
 
 	app->testFramebuffer = GenerateFrameBuffer(app);
 

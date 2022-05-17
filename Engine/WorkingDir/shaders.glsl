@@ -257,18 +257,29 @@ void main()
 	vec4 albedo = texture(uAlbedo,vTexCoord);	
 	vec4 normal = texture(uNormal,vTexCoord);	
 	vec4 position = texture(uPosition,vTexCoord);	
-
-
+	
 	vec3 lightColor = vec3(0.0);
 	for(int i = 0; i<uLightCount; ++i)
 	{
-		Light l = uLight[i];
+		
+			Light l = uLight[i];
 
-		if(l.type==0) //if directional light
-		{
-			float luminance = dot(normalize(normal.xyz),normalize(-l.direction));
-			lightColor += l.color * luminance;
-		}
+			if(l.type==0) //if directional light
+			{
+				float luminance = dot(normalize(normal.xyz),normalize(-l.direction));
+				lightColor += l.color * luminance;
+			}
+
+			if(l.type==1)
+			{
+				float dist = length(position.xyz-l.position);
+				float attenuation = clamp(1.0/ (dist*dist),0.0,1.0);
+
+				float luminance = dot(normalize(normal.xyz),normalize(l.position - position.xyz));
+
+				lightColor += l.color *luminance *  attenuation;
+			}
+		
 	}
 
 	oRadiance =  vec4(albedo.xyz * lightColor,1.0);
