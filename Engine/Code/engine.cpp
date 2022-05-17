@@ -343,7 +343,6 @@ void Init(App* app)
 
 	//Lights 
 	CreateDirectionalLight(app, vec3(1.0, 0.75, 0.5), vec3(1, -1, -1));
-	//CreateDirectionalLight(app, vec3(1.0, 1.0, 0.5), vec3(1.0, -0.5, -1.0));
 	CreateDirectionalLight(app, vec3(0.5, 0.5, 1.0), vec3(-1.0, -0.5, 0.5));
 
 
@@ -844,6 +843,8 @@ void GeometryPass(App* app)
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_TRUE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Render on this framebuffer render targets
 	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
@@ -960,6 +961,8 @@ void RenderLightMeshes(App* app)
 {
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
 
 	//Render on this framebuffer render targets
 	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
