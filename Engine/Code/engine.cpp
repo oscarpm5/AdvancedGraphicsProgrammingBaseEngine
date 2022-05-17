@@ -293,7 +293,6 @@ void Init(App* app)
 
 	app->deferredLightMeshProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHT_MESH_PASS");
 	Program& deferredLightMeshIdx = app->programs[app->deferredLightMeshProgramIdx];
-	app->deferredLightMesh_uTexture = glGetUniformLocation(deferredLightMeshIdx.handle, "uTexture");
 
 
 
@@ -316,6 +315,9 @@ void Init(App* app)
 
 	CreateSphere(app);
 	CreateQuad(app);
+
+	app->quadModel = CreateModelFromMesh(app, app->screenQuad);
+	app->sphereModel = CreateModelFromMesh(app, app->sphereMesh);
 
 	//Only need to do this once
 	glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
@@ -342,6 +344,8 @@ void Init(App* app)
 	//Lights 
 	CreateDirectionalLight(app, vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0));
 	CreateDirectionalLight(app, vec3(0.5, 0.0, 0.5), vec3(1.0, -1.0, -1.0));
+
+	CreatePointLight(app, vec3(0.5, 0.5, 0.5), vec3(2.0)); //TODO add more
 
 	app->testFramebuffer = GenerateFrameBuffer(app);
 
@@ -497,8 +501,6 @@ void Update(App* app)
 		PushVec3(app->cBuffer, light.color);
 		PushVec3(app->cBuffer, light.direction);
 		PushVec3(app->cBuffer, light.position);
-		PushMat4(app->cBuffer, light.worldTransform);
-
 	}
 
 	app->globalParamsSize = app->cBuffer.head - app->globalParamsoffset;
@@ -528,8 +530,6 @@ void Update(App* app)
 		AlignHead(app->lBuffer, app->uniformBlockAlignment);
 		Entity& entity = app->lightEntities[i];
 
-		entity.UpdateWorldMatrix();
-
 		entity.localParamsOffset = app->lBuffer.head;
 		PushMat4(app->lBuffer, entity.worldMatrix);
 		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * entity.worldMatrix);
@@ -538,8 +538,6 @@ void Update(App* app)
 	}
 
 	UnmapBuffer(app->lBuffer);
-
-
 
 }
 
@@ -786,6 +784,7 @@ void DeferredRender(App* app)
 {
 	GeometryPass(app);
 	LightPass(app);
+	RenderLightMeshes(app);
 
 	RenderTextureToScreen(app, GetDisplayTexture(app), app->displayMode == 4 ? true : false);
 }
@@ -952,7 +951,7 @@ void RenderLightMeshes(App* app)
 
 	//Select on which render targets to draw
 	GLuint drawbuffers[] = {
-		GL_COLOR_ATTACHMENT0 //Albedo
+		GL_COLOR_ATTACHMENT3 //Final
 	};
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
@@ -961,10 +960,12 @@ void RenderLightMeshes(App* app)
 
 
 	//Render point lights
-	for (int n = 0; n < app->lights.size(); ++n)
+
+	for (int n = 0; n < app->lightEntities.size(); ++n)
 	{
 
-		Mesh& mesh = app->meshes[app->sphereMesh];
+		Model& model = app->models[app->lightEntities[n].modelIndex];
+		Mesh& mesh = app->meshes[model.meshIdx];
 
 		for (u32 i = 0; i < mesh.submeshes.size(); ++i)
 		{
@@ -972,11 +973,7 @@ void RenderLightMeshes(App* app)
 			glBindVertexArray(vao);
 
 
-			glUniform1i(app->deferredLightMesh_uTexture, 0);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, app->textures[app->whiteTexIdx].handle);
-
-			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
+			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->lightEntities[n].localParamsOffset, app->lightEntities[n].localParamsSize);
 
 
 			Submesh& submesh = mesh.submeshes[i];
@@ -984,8 +981,6 @@ void RenderLightMeshes(App* app)
 		}
 
 	}
-
-
 
 	//Render directional lights
 	glDisable(GL_CULL_FACE);
@@ -1169,9 +1164,18 @@ void CreateQuad(App* app)
 	vertexFormat.push_back(VertexBufferAttribute({ 1, 2,sizeof(vec3) }));
 
 	Mesh* mesh = CreateMesh(app, &app->screenQuad);
+
 	//mesh->name = "Sphere";
 	mesh->AddSubmesh(vertexFormat, quadVertexVec, quadIndicesVec);
 	mesh->GenerateMeshData(app);
+}
+
+GLuint CreateModelFromMesh(App* app,GLuint meshIdx)
+{
+	app->models.push_back(Model{});
+	Model& model = app->models.back();
+	model.meshIdx = meshIdx;
+	return app->models.size() - 1u;
 }
 
 void CreateSphere(App* app)
@@ -1287,8 +1291,38 @@ u32 AddEntity(App* app, const char* name, u32 modelIndex)
 
 u32 AddPointLightEntity(App* app, vec3 position, vec3 scale)
 {
+	Entity toAdd;
+	toAdd.name = MakeString("PointLight");
+	toAdd.modelIndex = app->sphereModel;
+	toAdd.id = rand();
 
+	toAdd.position = position;
+	toAdd.roation = vec3(0.0f);
+	toAdd.scale = scale;
+
+	toAdd.UpdateWorldMatrix();
+
+	app->lightEntities.push_back(toAdd);
+	return app->lightEntities.size() - 1;
 }
+
+u32 AddDirectionalLightEntity(App* app, vec3 direction, vec3 scale, float offset)
+{
+	Entity toAdd;
+	toAdd.name = MakeString("DirectionalLight");
+	toAdd.modelIndex = app->quadModel;
+	toAdd.id = rand();
+
+	toAdd.position = (-direction*offset);
+	toAdd.roation = vec3(0.0f);
+	toAdd.scale = scale;
+
+	toAdd.UpdateWorldMatrix();
+
+	app->lightEntities.push_back(toAdd);
+	return app->lightEntities.size() - 1;
+}
+
 
 Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 {
@@ -1298,11 +1332,10 @@ Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 	l.type = LightType::LightType_Directional;
 	l.position = vec3(0.0, 0.0, 0.0);
 
-
+	AddDirectionalLightEntity(app, direction, vec3(1.0f), 5.0f);
 	//float directionalLightOffset = 5.0f;//TODO make global?
 	//worldMatrix = glm::lookAt(-light.direction* directionalLightOffset, vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 
-	l.worldTransform = glm::translate(l.direction);
 	app->lights.push_back(l);
 
 
@@ -1317,7 +1350,9 @@ Light* CreatePointLight(App* app, vec3 color, vec3 position)
 	l.direction = vec3(0.0, 0.0, 0.0);
 	l.type = LightType::LightType_Point;
 	l.position = position;
-	l.worldTransform = glm::translate(l.position);
+
+	AddPointLightEntity(app, position, vec3(1.0f));
+
 	app->lights.push_back(l);
 
 	return &app->lights.back();

@@ -283,13 +283,13 @@ struct App
 	GLuint deferredLighting_uNormal;
 	GLuint deferredLighting_uPosition;
 
-	//Location of the texture uniforms in the deferred light mesh shader
-	GLuint deferredLightMesh_uTexture;
-
 
 	//Patrick Model
 	GLuint model;
 
+	//Models
+	GLuint quadModel;
+	GLuint sphereModel;
 
 	GLint maxUniformBufferSize;
 	GLint uniformBlockAlignment;
@@ -340,6 +340,8 @@ void GeometryPass(App* app);
 
 void LightPass(App* app);
 
+void RenderLightMeshes(App* app);
+
 void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth);
 
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
@@ -348,6 +350,8 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
 void CreateSphere(App* app);
 void CreateQuad(App* app);
+
+GLuint CreateModelFromMesh(App* app, GLuint meshIdx);
 
 
 Mesh* CreateMesh(App * app, u32* index = nullptr);
