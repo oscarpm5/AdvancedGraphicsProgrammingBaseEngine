@@ -342,8 +342,7 @@ void Init(App* app)
 	app->entities[currentEntity].position = vec3(-3.5f, 0.0f, -3.5f);
 
 	//Lights 
-	CreateDirectionalLight(app, vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0));
-	CreateDirectionalLight(app, vec3(0.5, 0.0, 0.5), vec3(1.0, -1.0, -1.0));
+	CreateDirectionalLight(app, vec3(1.0, 1.0, 1.0), vec3(1.0, 1.0, 0.0));
 
 	CreatePointLight(app, vec3(0.5, 0.5, 0.5), vec3(2.0)); //TODO add more
 
@@ -959,10 +958,18 @@ void RenderLightMeshes(App* app)
 	glUseProgram(deferredLightMeshProgram.handle);
 
 
-	//Render point lights
+	//Render lights
 
 	for (int n = 0; n < app->lightEntities.size(); ++n)
 	{
+		if (app->lights[n].type == LightType::LightType_Directional)
+		{
+			glDisable(GL_CULL_FACE);
+		}
+		else
+		{
+			glEnable(GL_CULL_FACE);
+		}
 
 		Model& model = app->models[app->lightEntities[n].modelIndex];
 		Mesh& mesh = app->meshes[model.meshIdx];
@@ -981,9 +988,6 @@ void RenderLightMeshes(App* app)
 		}
 
 	}
-
-	//Render directional lights
-	glDisable(GL_CULL_FACE);
 
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1314,11 +1318,10 @@ u32 AddDirectionalLightEntity(App* app, vec3 direction, vec3 scale, float offset
 	toAdd.id = rand();
 
 	toAdd.position = (-direction*offset);
-	toAdd.roation = vec3(0.0f);
+	toAdd.roation = vec3(0.0f); //TODO
 	toAdd.scale = scale;
 
 	toAdd.UpdateWorldMatrix();
-
 	app->lightEntities.push_back(toAdd);
 	return app->lightEntities.size() - 1;
 }

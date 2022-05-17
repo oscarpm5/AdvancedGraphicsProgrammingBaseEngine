@@ -266,7 +266,7 @@ void main()
 
 		if(l.type==0) //if directional light
 		{
-			float luminance = dot(normalize(normal.xyz),normalize(l.direction));
+			float luminance = dot(normalize(normal.xyz),normalize(-l.direction));
 			lightColor += l.color * luminance;
 		}
 	}
