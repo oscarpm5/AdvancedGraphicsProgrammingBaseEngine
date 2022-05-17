@@ -342,8 +342,9 @@ void Init(App* app)
 	app->entities[currentEntity].position = vec3(-3.5f, 0.0f, -3.5f);
 
 	//Lights 
-	CreateDirectionalLight(app, vec3(1.0, 1.0, 0.5), vec3(1.0, -0.5, -1.0));
-	CreateDirectionalLight(app, vec3(0.5, 0.5, 1.0)*0.25f, vec3(-1.0, -0.5, 0.5));
+	CreateDirectionalLight(app, vec3(1.0, 1.0, 0.75), vec3(0, -1, -1));
+	//CreateDirectionalLight(app, vec3(1.0, 1.0, 0.5), vec3(1.0, -0.5, -1.0));
+	CreateDirectionalLight(app, vec3(0.5, 0.5, 1.0)*0.25f, vec3(-1.0, 0.0, 0.5));
 
 
 	for (int i = 0; i < 14; i++)
@@ -1298,7 +1299,7 @@ u32 AddEntity(App* app, const char* name, u32 modelIndex)
 	toAdd.id = rand();
 
 	toAdd.position = vec3(0.0f);
-	toAdd.roation = vec3(0.0f);
+	toAdd.rotation = vec3(0.0f);
 	toAdd.scale = vec3(1.0f);
 
 	toAdd.UpdateWorldMatrix();
@@ -1316,7 +1317,7 @@ u32 AddPointLightEntity(App* app, vec3 position, vec3 scale)
 	toAdd.id = rand();
 
 	toAdd.position = position;
-	toAdd.roation = vec3(0.0f);
+	toAdd.rotation = vec3(0.0f);
 	toAdd.scale = scale;
 
 	toAdd.UpdateWorldMatrix();
@@ -1333,10 +1334,13 @@ u32 AddDirectionalLightEntity(App* app, vec3 direction, vec3 scale, float offset
 	toAdd.id = rand();
 
 	toAdd.position = (-direction*offset);
-	toAdd.roation = vec3(0.0f); //TODO
 	toAdd.scale = scale;
-
+	toAdd.rotation = glm::eulerAngles(glm::quatLookAt(direction, vec3(0.0, 1.0, 0.0)));
+	toAdd.rotation = glm::degrees(toAdd.rotation);
 	toAdd.UpdateWorldMatrix();
+	//toAdd.worldMatrix *= glm::mat4_cast(glm::quatLookAt(glm::normalize(vec3(direction.z,direction.x,direction.y)), vec3(0, -1, 0)));
+
+
 	app->lightEntities.push_back(toAdd);
 	return app->lightEntities.size() - 1;
 }
@@ -1349,7 +1353,6 @@ Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 	l.direction = glm::normalize(direction);
 	l.type = LightType::LightType_Directional;
 	l.position = vec3(0.0, 0.0, 0.0);
-
 	AddDirectionalLightEntity(app, l.direction, vec3(1.0f), 10.0f);
 	//float directionalLightOffset = 5.0f;//TODO make global?
 	//worldMatrix = glm::lookAt(-light.direction* directionalLightOffset, vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
@@ -1628,7 +1631,6 @@ void Mesh::AddSubmesh(std::vector<VertexBufferAttribute> format, std::vector<flo
 	submeshes.push_back(submesh);
 }
 
-
 Camera::Camera()
 {
 	projectionMode = ProjectionMode::PERSPECTIVE;
@@ -1665,6 +1667,6 @@ void Camera::UpdateMatrices()
 
 glm::mat4 Entity::UpdateWorldMatrix()
 {
-	worldMatrix = TransformPositionScaleRot(position, roation, scale);
+	worldMatrix = TransformPositionScaleRot(position, rotation, scale);
 	return worldMatrix;
 }

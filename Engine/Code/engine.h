@@ -171,7 +171,7 @@ public:
 	u32 id;
 
 	glm::vec3 position;
-	glm::vec3 roation;
+	glm::vec3 rotation;
 	glm::vec3 scale;
 
 	glm::mat4 worldMatrix;
