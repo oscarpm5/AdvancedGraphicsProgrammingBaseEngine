@@ -8,14 +8,12 @@
 #include "assimp_model_loading.h"
 #include <glad/glad.h>
 
-
 struct Vertex
 {
 	vec3 pos;
 	vec3 norm;
 	vec2 uv;
 };
-
 
 struct VertexBufferAttribute
 {
@@ -46,7 +44,6 @@ struct Vao
 	GLuint handle;
 	GLuint programHandle;
 };
-
 
 struct Model
 {
@@ -91,9 +88,6 @@ public:
 	Material();
 };
 
-
-
-
 struct Image
 {
 	void* pixels;
@@ -115,14 +109,8 @@ struct Program
 	std::string        programName;
 	u64                lastWriteTimestamp; // What is this for?
 	VertexShaderLayout vertexInputLayout;
-
 };
 
-enum Mode
-{
-	Mode_TexturedQuad,
-	Mode_Count
-};
 struct VertexV3V2
 {
 	glm::vec3 pos;
@@ -162,7 +150,7 @@ public:
 
 public:
 	Camera();
-	Camera(float fov,float aspectRatio,float zNear,float zFar);
+	Camera(float fov, float aspectRatio, float zNear, float zFar);
 	void UpdateMatrices();
 };
 
@@ -243,7 +231,6 @@ struct App
 	std::vector<Model>  models;
 	std::vector<Program>  programs;
 
-
 	std::vector<Entity> entities;
 	std::vector<Entity> lightEntities;
 
@@ -262,14 +249,10 @@ struct App
 	u32 normalTexIdx;
 	u32 magentaTexIdx;
 
-	// Mode
-	Mode mode;
-
 	// Embedded geometry (in-editor simple meshes such as
 	// a screen filling quad, a cube, a sphere...)
 	GLuint screenQuad; //Mesh
 	GLuint sphereMesh; //Mesh
-
 
 	// Location of the texture uniform in the textured quad shader
 	GLuint programUniformTexture;
@@ -284,7 +267,6 @@ struct App
 	GLuint deferredLighting_uAlbedo;
 	GLuint deferredLighting_uNormal;
 	GLuint deferredLighting_uPosition;
-
 
 	//Patrick Model
 	GLuint model;
@@ -309,7 +291,7 @@ struct App
 	u32 globalParamsSize;
 
 	Framebuffer testFramebuffer;
-	
+
 	//Texture Display mode
 	u32 displayMode;
 
@@ -362,12 +344,7 @@ void CreateQuad(App* app);
 
 GLuint CreateModelFromMesh(App* app, GLuint meshIdx);
 
-
-Mesh* CreateMesh(App * app, u32* index = nullptr);
-
-Submesh* CreateSubmesh(std::vector<vec3> verticesToProcess, std::vector<vec3> normalsToProcess, std::vector<u32> indicesToProess);
-
-void AddSubmeshToMesh(Submesh* submesh);
+Mesh* CreateMesh(App* app, u32* index = nullptr);
 
 glm::mat4 TransformScale(const glm::vec3& scaleFactors);
 glm::mat4 TransformPositionScale(const glm::vec3& pos, const glm::vec3& scaleFactors);

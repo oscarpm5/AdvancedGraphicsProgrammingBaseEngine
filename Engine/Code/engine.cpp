@@ -5,11 +5,6 @@
 // graphics related GUI options, and so on.
 //
 
-
-//Vertices = 0
-//Normals = 1
-//TexCoords = 2
-
 #include "engine.h"
 #include "buffer_management.h"
 #include <imgui.h>
@@ -17,7 +12,6 @@
 #include <stb_image_write.h>
 
 #define BINDING(b) b
-
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName)
 {
@@ -114,7 +108,6 @@ u32 LoadProgram(App* app, const char* filepath, const char* programName)
 
 	for (u32 i = 0; i < attributeCount; ++i)
 	{
-
 		GLchar attribName[256];
 		GLsizei attribNameLength;
 		GLint attribSize;
@@ -158,7 +151,6 @@ u32 LoadProgram(App* app, const char* filepath, const char* programName)
 
 		program.vertexInputLayout.attributes.push_back(newInputAttrib);
 	}
-
 
 	app->programs.push_back(program);
 
@@ -269,7 +261,6 @@ void Init(App* app)
 	// - programs (and retrieve uniform indices)
 	// - textures
 
-
 	//Program
 	app->texturedGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
 	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
@@ -290,11 +281,8 @@ void Init(App* app)
 	app->deferredLighting_uNormal = glGetUniformLocation(deferredLightingIdx.handle, "uNormal");
 	app->deferredLighting_uPosition = glGetUniformLocation(deferredLightingIdx.handle, "uPosition");
 
-
 	app->deferredLightMeshProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHT_MESH_PASS");
 	Program& deferredLightMeshIdx = app->programs[app->deferredLightMeshProgramIdx];
-
-
 
 	//Texture
 	app->diceTexIdx = LoadTexture2D(app, "dice.png");
@@ -303,11 +291,8 @@ void Init(App* app)
 	app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
 	app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
-	app->mode = Mode_Count;
-
 	app->model = LoadModel(app, "Patrick/Patrick.obj");
 	app->modelRoom = LoadModel(app, "Room/Room #1.obj");
-
 
 	float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
 	app->cam = Camera(60.0f, aspectRatio, 0.1f, 1000.0f);
@@ -325,16 +310,10 @@ void Init(App* app)
 	glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
 	glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
-
 	//For each buffer that needs to be created
 
 	app->lBuffer = CreateConstantBuffer(app->maxUniformBufferSize);
 	app->cBuffer = CreateConstantBuffer(app->maxUniformBufferSize);
-
-	//glGenBuffers(1, &app->bufferHandle);
-	//glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
-	//glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
-	//glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
 	u32 currentEntity = AddEntity(app, "Patrick", app->model);//Add a patrick
 	app->entities[currentEntity].position = vec3(-1.5f, 0.5f, 1.0f);
@@ -351,14 +330,12 @@ void Init(App* app)
 	app->entities[currentEntity].scale = vec3(0.6f);
 	app->entities[currentEntity].rotation = vec3(0.0f, -90.0f, 0.0f);
 
-
 	currentEntity = AddEntity(app, "Room", app->modelRoom);//Add a room model
 	app->entities[currentEntity].position = vec3(0.0f, -2.0f, -0.0f);
 
-	//Lights 
+	//Lights
 	CreateDirectionalLight(app, vec3(1.0, 0.75, 0.5), vec3(1, -1, -1));
 	CreateDirectionalLight(app, vec3(0.5, 0.5, 1.0), vec3(-1.0, -0.5, 0.5));
-
 
 	for (int i = 0; i < 14; i++)
 	{
@@ -367,15 +344,10 @@ void Init(App* app)
 		CreatePointLight(app, color * vec3(3.0), position); //TODO add more
 	}
 
-
-
 	app->testFramebuffer = GenerateFrameBuffer(app);
-
 
 	app->renderLightMeshes = true;
 }
-
-
 
 float RandSph()
 {
@@ -385,7 +357,6 @@ float RandSph()
 void Gui(App* app)
 {
 	//ImGui::ShowDemoWindow();
-
 
 	ImGui::Begin("Info");
 	ImGui::TextWrapped("FPS: %f", 1.0f / app->deltaTime);
@@ -460,7 +431,6 @@ void Gui(App* app)
 			}
 			ImGui::Unindent();
 
-
 			char buf[128];
 			sprintf(buf, "Transform: %s##%d", app->entities[selected].name.str, app->entities[selected].id);
 			if (ImGui::CollapsingHeader(buf, flags))
@@ -491,7 +461,6 @@ void Gui(App* app)
 					hasToUpdateMatrix = true;
 				}
 
-
 				if (hasToUpdateMatrix)
 					app->entities[selected].UpdateWorldMatrix();
 			}
@@ -500,15 +469,10 @@ void Gui(App* app)
 			{
 				app->entities.erase(app->entities.begin() + selected);
 			}
-
 		}
-
-
-
 
 		ImGui::End();
 	}
-
 }
 
 void Update(App* app)
@@ -523,9 +487,7 @@ void Update(App* app)
 
 	HandleCameraMove(app);
 
-
 	// You can handle app->input keyboard/mouse here
-
 
 	for (u64 i = 0; i < app->programs.size(); ++i)
 	{
@@ -539,13 +501,9 @@ void Update(App* app)
 			program.handle = CreateProgramFromSource(programSource, programName);
 			program.lastWriteTimestamp = currentTimestamp;
 		}
-
-
 	}
 
-
 	//Push data into the buffer (ordered according to the uniform block)
-
 
 	//Global buffer
 	MapBuffer(app->cBuffer, GL_WRITE_ONLY);
@@ -579,12 +537,10 @@ void Update(App* app)
 
 		entity.UpdateWorldMatrix();
 
-
 		entity.localParamsOffset = app->lBuffer.head;
 		PushMat4(app->lBuffer, entity.worldMatrix);
 		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * entity.worldMatrix);
 		entity.localParamsSize = app->lBuffer.head - entity.localParamsOffset;
-
 	}
 
 	for (u32 i = 0; i < app->lightEntities.size(); ++i) //Light Mesh entities
@@ -597,11 +553,9 @@ void Update(App* app)
 		PushMat4(app->lBuffer, app->cam.projection * app->cam.view * entity.worldMatrix);
 		PushVec3(app->lBuffer, app->lights[i].color);
 		entity.localParamsSize = app->lBuffer.head - entity.localParamsOffset;
-
 	}
 
 	UnmapBuffer(app->lBuffer);
-
 }
 
 void HandleCameraMove(App* app)
@@ -613,7 +567,6 @@ void HandleCameraMove(App* app)
 	{
 		speed *= speedMult;
 	}
-
 
 	float horizontalMove = 0.0f;
 	float verticalMove = 0.0f;
@@ -646,7 +599,6 @@ void HandleCameraMove(App* app)
 		forwardMove += -1;
 	}
 
-
 	vec3 forwardVec = glm::normalize(-app->cam.position);
 	vec3 rightVec = glm::normalize(glm::cross(forwardVec, vec3(0.0f, 1.0f, 0.0f)));
 	vec3 vericalVec = glm::normalize(glm::cross(rightVec, forwardVec));
@@ -672,7 +624,6 @@ void DeferredRender(App* app)
 	{
 		RenderLightMeshes(app);
 	}
-
 
 	RenderTextureToScreen(app, GetDisplayTexture(app), app->displayMode == 4 ? true : false);
 }
@@ -741,11 +692,8 @@ void GeometryPass(App* app)
 	Program& deferredgeometryProgram = app->programs[app->deferredGeometryProgramIdx];
 	glUseProgram(deferredgeometryProgram.handle);
 
-
-
 	for (int n = 0; n < app->entities.size(); ++n)
 	{
-
 		Model& model = app->models[app->entities[n].modelIndex];
 		Mesh& mesh = app->meshes[model.meshIdx];
 
@@ -769,17 +717,12 @@ void GeometryPass(App* app)
 				glBindTexture(GL_TEXTURE_2D, app->textures[app->whiteTexIdx].handle);
 			}
 
-
-
 			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
-
 
 			Submesh& submesh = mesh.submeshes[i];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 		}
-
 	}
-
 
 	glBindVertexArray(0);
 	glUseProgram(0);
@@ -793,7 +736,6 @@ void LightPass(App* app)
 	glDepthMask(GL_FALSE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
 
 	//Render on this framebuffer render targets
 	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
@@ -809,13 +751,10 @@ void LightPass(App* app)
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalParamsSize); //Only once as is used for each object
 
-
 	//TODO push sphere lights as geometry
-
 
 	//render quad
 	Mesh& mesh = app->meshes[app->screenQuad];
-
 
 	GLuint vao = FindVAO(mesh, 0, deferredlightProgram);
 	glBindVertexArray(vao);
@@ -835,7 +774,6 @@ void LightPass(App* app)
 
 	glBindVertexArray(0);
 	glUseProgram(0);
-
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -859,7 +797,6 @@ void RenderLightMeshes(App* app)
 	Program& deferredLightMeshProgram = app->programs[app->deferredLightMeshProgramIdx];
 	glUseProgram(deferredLightMeshProgram.handle);
 
-
 	//Render lights
 
 	for (int n = 0; n < app->lightEntities.size(); ++n)
@@ -881,16 +818,12 @@ void RenderLightMeshes(App* app)
 			GLuint vao = FindVAO(mesh, i, deferredLightMeshProgram);
 			glBindVertexArray(vao);
 
-
 			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->lightEntities[n].localParamsOffset, app->lightEntities[n].localParamsSize);
-
 
 			Submesh& submesh = mesh.submeshes[i];
 			glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 		}
-
 	}
-
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -911,7 +844,6 @@ void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth)
 	glUseProgram(texturedGeometryProgram.handle);
 
 	Mesh& mesh = app->meshes[app->screenQuad];
-
 
 	GLuint vao = FindVAO(mesh, 0, texturedGeometryProgram);
 	glBindVertexArray(vao);
@@ -943,7 +875,6 @@ void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei l
 	case GL_DEBUG_SOURCE_THIRD_PARTY:		ELOG(" - source: GL_DEBUG_SOURCE_THIRD_PARTY"); break; //An application associated with OpenGL
 	case GL_DEBUG_SOURCE_APPLICATION:		ELOG(" - source: GL_DEBUG_SOURCE_APPLICATION"); break; //Generated by the user of this application
 	case GL_DEBUG_SOURCE_OTHER:				ELOG(" - source: GL_DEBUG_SOURCE_OTHER"); break; //Some source that isn't one of these
-
 	}
 
 	switch (type)
@@ -957,7 +888,6 @@ void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei l
 	case GL_DEBUG_TYPE_PUSH_GROUP:			ELOG(" - type: GL_DEBUG_TYPE_PUSH_GROUP"); break; //Group pushing
 	case GL_DEBUG_TYPE_POP_GROUP:			ELOG(" - type: GL_DEBUG_TYPE_POP_GROUP"); break; //foo
 	case GL_DEBUG_TYPE_OTHER:				ELOG(" - type: GL_DEBUG_TYPE_OTHER"); break; //Some type that isn't one of these
-
 	}
 
 	switch (severity)
@@ -966,11 +896,7 @@ void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei l
 	case GL_DEBUG_SEVERITY_MEDIUM:				ELOG(" - type: GL_DEBUG_SEVERITY_MEDIUM"); break; //Major performance warnings, shader compilation ...
 	case GL_DEBUG_SEVERITY_LOW:					ELOG(" - type: GL_DEBUG_SEVERITY_LOW"); break; //Redundant state change performance warning, ...
 	case GL_DEBUG_SEVERITY_NOTIFICATION:		ELOG(" - type: GL_DEBUG_SEVERITY_NOTIFICATION"); break; //Anything that isn't an error or performance ...
-
 	}
-
-
-
 }
 
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
@@ -1013,7 +939,6 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
 					attributeWasLinked = true;
 					break;
 				}
-
 			}
 			if (!attributeWasLinked)
 			{
@@ -1049,7 +974,6 @@ void CreateQuad(App* app)
 		quadVertexVec.push_back(vertices[i].pos.z);
 		quadVertexVec.push_back(vertices[i].uv.x);
 		quadVertexVec.push_back(vertices[i].uv.y);
-
 	}
 
 	const u16 indices[] = {
@@ -1063,7 +987,6 @@ void CreateQuad(App* app)
 	{
 		quadIndicesVec.push_back(indices[i]);
 	}
-
 
 	std::vector<VertexBufferAttribute> vertexFormat;
 	vertexFormat.push_back(VertexBufferAttribute({ 0, 3, 0 }));
@@ -1086,7 +1009,7 @@ GLuint CreateModelFromMesh(App* app, GLuint meshIdx)
 
 void CreateSphere(App* app)
 {
-#define H 32 
+#define H 32
 #define V 16
 	static const float pi = 3.1416f;
 
@@ -1129,7 +1052,6 @@ void CreateSphere(App* app)
 			sphereIndicesVec.push_back(sphereIndices[h][v][3]);
 			sphereIndicesVec.push_back(sphereIndices[h][v][4]);
 			sphereIndicesVec.push_back(sphereIndices[h][v][5]);
-
 		}
 	}
 
@@ -1142,7 +1064,6 @@ void CreateSphere(App* app)
 	mesh->AddSubmesh(vertexFormat, sphereVertexVec, sphereIndicesVec);
 	mesh->GenerateMeshData(app);
 }
-
 
 Mesh* CreateMesh(App* app, u32* index)
 {
@@ -1194,7 +1115,6 @@ u32 AddEntity(App* app, const char* name, u32 modelIndex)
 	return app->entities.size() - 1;
 }
 
-
 u32 AddPointLightEntity(App* app, vec3 position, vec3 scale)
 {
 	Entity toAdd;
@@ -1225,11 +1145,9 @@ u32 AddDirectionalLightEntity(App* app, vec3 direction, vec3 scale, float offset
 	toAdd.rotation = glm::degrees(toAdd.rotation);
 	toAdd.UpdateWorldMatrix();
 
-
 	app->lightEntities.push_back(toAdd);
 	return app->lightEntities.size() - 1;
 }
-
 
 Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 {
@@ -1240,10 +1158,7 @@ Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction)
 	l.position = vec3(0.0, 0.0, 0.0);
 	AddDirectionalLightEntity(app, l.direction, vec3(1.0f), 10.0f);
 
-
 	app->lights.push_back(l);
-
-
 
 	return &app->lights.back();
 }
@@ -1272,7 +1187,6 @@ Framebuffer GenerateFrameBuffer(App* app)
 	ret.colorAttachment2Handle = GenerateColTex2DHighPrecision(app->displaySize);
 	ret.colorAttachment3Handle = GenerateColTex2DHighPrecision(app->displaySize);
 
-
 	ret.depthAttachmentHandle = GenerateDepthTex2D(app->displaySize);
 
 	ret.handle;
@@ -1282,7 +1196,6 @@ Framebuffer GenerateFrameBuffer(App* app)
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, ret.colorAttachment1Handle, 0); //Normal
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, ret.colorAttachment2Handle, 0); //Position
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, ret.colorAttachment3Handle, 0); //Radiance
-
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, ret.depthAttachmentHandle, 0);
 
@@ -1364,11 +1277,9 @@ GLuint GenerateDepthTex2D(vec2 displaySize)
 //Once we have the mesh with its submeshes, we can construct its data
 void Mesh::GenerateMeshData(App* app)
 {
-
 	//first we delete buffers if they have been created before
 	glDeleteBuffers(1, &vertexBufferHandle);
 	glDeleteBuffers(1, &indexBufferHandle);
-
 
 	u32 vertexBufferSize = 0;
 	u32 indexBufferSize = 0;
@@ -1407,7 +1318,6 @@ void Mesh::GenerateMeshData(App* app)
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 }
 
 void Mesh::AddSubmesh(std::vector<VertexBufferAttribute> format, std::vector<float> vertexData, std::vector<u32> indicesData)
