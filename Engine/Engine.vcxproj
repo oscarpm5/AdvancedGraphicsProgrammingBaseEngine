@@ -23,6 +23,7 @@
     <ClCompile Include="Code\buffer_management.cpp" />
     <ClCompile Include="Code\engine.cpp" />
     <ClCompile Include="Code\platform.cpp" />
+    <ClCompile Include="SSAO.cpp" />
     <ClCompile Include="ThirdParty\glad\include\glad\glad.c" />
     <ClCompile Include="ThirdParty\imgui-docking\imgui.cpp" />
     <ClCompile Include="ThirdParty\imgui-docking\imgui_demo.cpp" />
@@ -38,6 +39,7 @@
     <ClInclude Include="Code\buffer_management.h" />
     <ClInclude Include="Code\engine.h" />
     <ClInclude Include="Code\platform.h" />
+    <ClInclude Include="SSAO.h" />
     <ClInclude Include="ThirdParty\glad\include\glad\glad.h" />
     <ClInclude Include="ThirdParty\glad\include\glad\khrplatform.h" />
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h" />
