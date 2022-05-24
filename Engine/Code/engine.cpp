@@ -394,7 +394,7 @@ void Gui(App* app)
 		ImGui::Checkbox("Display Light Debug Meshes", &app->renderLightMeshes);
 
 		static int current_draw_mode = 3;
-		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Final\0Depth\0\0"))
+		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Final\0Depth\0SSAO\0\0"))
 		{
 			app->displayMode = current_draw_mode;
 		}
@@ -660,6 +660,11 @@ GLuint GetDisplayTexture(App* app)
 	case 4:
 	{
 		return app->testFramebuffer.depthAttachmentHandle;
+	}
+	break;
+	case 5:
+	{
+		return app->ssaoEffect.fbSSAO.colorAttachment0Handle;
 	}
 	break;
 	}
