@@ -57,7 +57,7 @@
     <ClCompile Include="Code\buffer_management.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="SSAO.cpp">
+    <ClCompile Include="Code\SSAO.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
   </ItemGroup>
@@ -107,12 +107,15 @@
     <ClInclude Include="Code\buffer_management.h">
       <Filter>Engine</Filter>
     </ClInclude>
-    <ClInclude Include="SSAO.h">
+    <ClInclude Include="Code\SSAO.h">
       <Filter>Engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="WorkingDir\shaders.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\postProcess.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

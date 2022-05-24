@@ -5,6 +5,7 @@
 #pragma once
 
 #include "platform.h"
+#include "SSAO.h"
 #include "assimp_model_loading.h"
 #include <glad/glad.h>
 
@@ -196,18 +197,12 @@ struct Light
 	vec3 position;
 };
 
-struct Framebuffer
-{
-	GLuint handle;
-	GLuint colorAttachment0Handle;
-	GLuint colorAttachment1Handle;
-	GLuint colorAttachment2Handle;
-	GLuint colorAttachment3Handle;
-	GLuint depthAttachmentHandle;
-};
+struct Framebuffer;
 
 struct App
 {
+	SSAO ssaoEffect;
+
 	// Loop
 	f32  deltaTime;
 	bool isRunning;
@@ -241,6 +236,8 @@ struct App
 	u32 deferredGeometryProgramIdx;
 	u32 deferredLightProgramIdx;
 	u32 deferredLightMeshProgramIdx;
+
+	u32 postProcessSSAOProgramIdx;
 
 	// texture indices
 	u32 diceTexIdx;
@@ -328,6 +325,8 @@ void DeferredRender(App* app);
 GLuint GetDisplayTexture(App* app);
 
 void GeometryPass(App* app);
+
+void SSAOPass(App* app);
 
 void LightPass(App* app);
 
