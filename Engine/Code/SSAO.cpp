@@ -31,7 +31,7 @@ u32 SSAO::LoadSSAOProgram(App* app)
 	app->postProcessSSAOProgramIdx = LoadProgram(app, "postProcess.glsl", "SSAO");
 	Program& postProcessSSAOProgram = app->programs[app->postProcessSSAOProgramIdx];
 	uniformNormalTexture = glGetUniformLocation(postProcessSSAOProgram.handle, "uNormalTexture");
-	uniformPositionTexture = glGetUniformLocation(postProcessSSAOProgram.handle, "uPosTexture");
+	uniformDepthTexture = glGetUniformLocation(postProcessSSAOProgram.handle, "uDepthTexture");
 	uniformRandomVecTexture = glGetUniformLocation(postProcessSSAOProgram.handle, "uRandomVecTexture");
 
 	uniformKernel = glGetUniformLocation(postProcessSSAOProgram.handle, "uKernel");
@@ -39,6 +39,8 @@ u32 SSAO::LoadSSAOProgram(App* app)
 	uniformProjMat = glGetUniformLocation(postProcessSSAOProgram.handle, "uProjMatrix");
 
 	uniformNoiseScale = glGetUniformLocation(postProcessSSAOProgram.handle, "uNoiseScale");
+	uniformViewportSize = glGetUniformLocation(postProcessSSAOProgram.handle, "uViewportSize");
+	
 
 	return app->postProcessSSAOProgramIdx;
 }
@@ -94,15 +96,15 @@ void SSAO::GenerateSSAONoise(unsigned int noiseSamplesAxis)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void SSAO::PassUniformsToShader(GLuint gPosTextureHandle, GLuint gNormTextureHandle, Camera& cam, App* app)
+void SSAO::PassUniformsToShader(GLuint gDepthTextureHandle, GLuint gNormTextureHandle, Camera& cam, App* app)
 {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gNormTextureHandle);
 	glUniform1i(uniformNormalTexture, 0);
 
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, gPosTextureHandle);
-	glUniform1i(uniformPositionTexture, 1);
+	glBindTexture(GL_TEXTURE_2D, gDepthTextureHandle);
+	glUniform1i(uniformDepthTexture, 1);
 
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, noiseTextureHandle);
@@ -110,7 +112,10 @@ void SSAO::PassUniformsToShader(GLuint gPosTextureHandle, GLuint gNormTextureHan
 
 	glUniform3fv(uniformKernel, kernelSSAO.size(), glm::value_ptr(kernelSSAO[0]));
 	glUniform2f(uniformNoiseScale, ((float)app->displaySize.x / (float)noiseSizeAxis), ((float)app->displaySize.y / (float)noiseSizeAxis));
+	glUniform2f(uniformViewportSize, (float)app->displaySize.x, (float)app->displaySize.y);
 
+
+	
 	glUniformMatrix4fv(uniformViewMat, 1, GL_FALSE, glm::value_ptr(cam.view));
 	glUniformMatrix4fv(uniformProjMat, 1, GL_FALSE, glm::value_ptr(cam.projection));
 

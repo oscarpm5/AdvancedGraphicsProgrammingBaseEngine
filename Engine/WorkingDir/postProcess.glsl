@@ -27,14 +27,71 @@ uniform mat4 uViewMatrix;//TODO consider passing this matrix as a uniform buffer
 uniform mat4 uProjMatrix;//TODO consider passing this matrix as a uniform buffer
 
 uniform sampler2D uNormalTexture;
-uniform sampler2D uPosTexture;
+uniform sampler2D uDepthTexture;
 uniform sampler2D uRandomVecTexture;
 
 const int MAX_KERNEL_SIZE = 64;
 uniform vec3 uKernel[MAX_KERNEL_SIZE];
 uniform vec2 uNoiseScale;
+uniform vec2 uViewportSize;
 
 layout(location=0) out vec4 oColor;
+
+
+//Returns fragment pos in view space
+//Params
+//d: depth (from depth buffer)
+//l: left
+//r: right
+//b: bottom
+//t: top
+//n: znear
+//f: zfar
+//v: viewport size
+vec3 ReconstructPixelPos(float d, float l, float r, float b, float t, float n, float f, vec2 v)
+{
+		float xndc = gl_FragCoord.x/v.x * 2.0 -1.0;
+		float yndc = gl_FragCoord.y/v.y * 2.0 -1.0;
+		float zndc = d*2.0-1.0;
+		float zeye = 2*f*n/(zndc*(f-n)-(f+n));//pixel coords to NDC
+		float xeye = -zeye*(xndc*(r-l)+(r+l))/(2.0*n);
+		float yeye = -zeye*(yndc*(t-b)+(t+b))/(2.0*n);
+		vec3 eyecoords = vec3(xeye,yeye,zeye);
+		return eyecoords;
+}
+
+//Returns fragment pos in view space
+//Params
+//d: depth (from depth buffer)
+//projectionMatrixInv: inverse of the projection matrix
+//v: viewport size
+vec3 ReconstructPixelPos(float d,mat4 projectionMatrixInv, vec2 v)
+{
+		float xndc = gl_FragCoord.x/v.x * 2.0 -1.0;
+		float yndc = gl_FragCoord.y/v.y * 2.0 -1.0;
+		float zndc = d*2.0-1.0;
+		vec4 posNDC = vec4(xndc,yndc,zndc,1.0);
+		vec4 posView = projectionMatrixInv * posNDC;
+
+		return posView.xyz / posView.w;
+}
+
+//Returns fragment pos in view space
+//Params
+//
+//projectionMatrixInv: inverse of the projection matrix
+//v: viewport size
+vec3 ReconstructPixelPos(vec2 uv,mat4 projectionMatrixInv, vec2 v)
+{
+		float d = texture(uDepthTexture,uv).x;
+		float xndc = uv.x/v.x * 2.0 -1.0;
+		float yndc = uv.y/v.y * 2.0 -1.0;
+		float zndc = d*2.0-1.0;
+		vec4 posNDC = vec4(xndc,yndc,zndc,1.0);
+		vec4 posView = projectionMatrixInv * posNDC;
+
+		return posView.xyz / posView.w;
+}
 
 
 
@@ -42,18 +99,21 @@ void main()
 {
 	float radius = 1.0;//TODO get this from c++ as a uniform
 	float bias = 0.0;//TODO get this from c++ as a uniform
-	float noiseScale = 1.0;//TODO get this from c++ as a uniform
 
 	float occlusion = 0.0;
 
 	vec3 randomVec = texture(uRandomVecTexture, vTexCoord*uNoiseScale).xyz; 
-	vec3 fragPosView = vec3(uViewMatrix * vec4(texture(uPosTexture,vTexCoord).xyz,1.0));
 	vec3 normalView =  vec3(uViewMatrix * vec4(texture(uNormalTexture,vTexCoord).xyz,0.0));
 	
 	//Create tangent to world basis
 	vec3 tangent = normalize(randomVec-normalView*dot(randomVec,normalView));
 	vec3 bitangent = cross(normalView,tangent);
 	mat3 TBN = mat3(tangent,bitangent,normalView);
+
+	mat4 invProjMat = inverse(uProjMatrix);
+	vec3 fragPosView = ReconstructPixelPos(texture(uDepthTexture,vTexCoord).x,invProjMat,uViewportSize);
+
+
 
 	for(int i =0; i<MAX_KERNEL_SIZE; ++i)
 	{
@@ -67,11 +127,11 @@ void main()
 		offset.xyz = offset.xyz*0.5+0.5; //transform to 0,1 range
 
 
-		//sample depth
-		float sampleDepth = vec3(uViewMatrix * vec4(texture(uPosTexture,offset.xy).xyz,1.0)).z;
+		//sample new pos
+		vec3 samplePosNew = ReconstructPixelPos(offset.xy,invProjMat,uViewportSize);
 
-		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPosView.z - sampleDepth));
-		occlusion += (sampleDepth >= samplePosView.z + bias ? 1.0 : 0.0)*rangeCheck;  
+		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPosView.z - samplePosNew.z));
+		occlusion += (samplePosNew.z >= samplePosView.z + bias ? 1.0 : 0.0)*rangeCheck;  
 	}
 
 	oColor = vec4(vec3(1.0-occlusion/float(MAX_KERNEL_SIZE)),1.0);

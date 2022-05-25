@@ -766,7 +766,7 @@ void SSAOPass(App* app)
 	GLuint vao = FindVAO(mesh, 0, postProcessSSAOProgram);
 	glBindVertexArray(vao);
 
-	app->ssaoEffect.PassUniformsToShader(app->testFramebuffer.colorAttachment2Handle, app->testFramebuffer.colorAttachment1Handle, app->cam,app);
+	app->ssaoEffect.PassUniformsToShader(app->testFramebuffer.depthAttachmentHandle, app->testFramebuffer.colorAttachment1Handle, app->cam,app);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
