@@ -21,7 +21,9 @@ void SSAO::Init(App* app)
 {
 	LoadSSAOProgram(app);
 	GenerateSSAOKernel(64);
-	GenerateSSAONoise(32);
+	GenerateSSAONoise(64);
+
+	LoadSSAOBlurProgram(app);
 
 	fbSSAO = GenerateFrameBuffer(app);
 }
@@ -45,6 +47,15 @@ u32 SSAO::LoadSSAOProgram(App* app)
 	return app->postProcessSSAOProgramIdx;
 }
 
+u32 SSAO::LoadSSAOBlurProgram(App* app)
+{
+	app->postProcessSSAOBlurProgramIdx = LoadProgram(app, "postProcess.glsl", "SIMPLE_BLUR");
+	Program& postProcessSSAOBlurProgram = app->programs[app->postProcessSSAOBlurProgramIdx];
+	uniformBlurInputTexture = glGetUniformLocation(postProcessSSAOBlurProgram.handle, "uBlurInputTexture");
+	uniformBlurKernelHalfSize = glGetUniformLocation(postProcessSSAOBlurProgram.handle, "uKernelHalfSize");
+
+	return app->postProcessSSAOBlurProgramIdx;
+}
 
 void SSAO::GenerateSSAOKernel(unsigned int kernelSize)
 {
@@ -96,7 +107,7 @@ void SSAO::GenerateSSAONoise(unsigned int noiseSamplesAxis)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void SSAO::PassUniformsToShader(GLuint gDepthTextureHandle, GLuint gNormTextureHandle, Camera& cam, App* app)
+void SSAO::PassUniformsToSSAOShader(GLuint gDepthTextureHandle, GLuint gNormTextureHandle, Camera& cam, App* app)
 {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gNormTextureHandle);
@@ -119,4 +130,13 @@ void SSAO::PassUniformsToShader(GLuint gDepthTextureHandle, GLuint gNormTextureH
 	glUniformMatrix4fv(uniformViewMat, 1, GL_FALSE, glm::value_ptr(cam.view));
 	glUniformMatrix4fv(uniformProjMat, 1, GL_FALSE, glm::value_ptr(cam.projection));
 
+}
+
+void SSAO::PassUniformsToSSAOBlurShader(GLuint textureToBlurHandle, u32 kernelHalfSize)
+{
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureToBlurHandle);
+	glUniform1i(uniformBlurInputTexture, 0);
+
+	glUniform1i(uniformBlurKernelHalfSize, kernelHalfSize);
 }

@@ -238,7 +238,7 @@ struct App
 	u32 deferredLightMeshProgramIdx;
 
 	u32 postProcessSSAOProgramIdx;
-
+	u32 postProcessSSAOBlurProgramIdx;
 	// texture indices
 	u32 diceTexIdx;
 	u32 whiteTexIdx;
@@ -327,6 +327,8 @@ GLuint GetDisplayTexture(App* app);
 void GeometryPass(App* app);
 
 void SSAOPass(App* app);
+
+void SSAOBlurPass(App* app);
 
 void LightPass(App* app);
 

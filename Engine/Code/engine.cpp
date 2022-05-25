@@ -394,7 +394,7 @@ void Gui(App* app)
 		ImGui::Checkbox("Display Light Debug Meshes", &app->renderLightMeshes);
 
 		static int current_draw_mode = 3;
-		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Final\0Depth\0SSAO\0\0"))
+		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Final\0Depth\0SSAO\0SSAOBlured\0\0"))
 		{
 			app->displayMode = current_draw_mode;
 		}
@@ -623,6 +623,7 @@ void DeferredRender(App* app)
 {
 	GeometryPass(app);
 	SSAOPass(app);
+	SSAOBlurPass(app);
 	LightPass(app);
 
 	if (app->renderLightMeshes == true)
@@ -665,6 +666,11 @@ GLuint GetDisplayTexture(App* app)
 	case 5:
 	{
 		return app->ssaoEffect.fbSSAO.colorAttachment0Handle;
+	}
+	break;
+	case 6:
+	{
+		return app->ssaoEffect.fbSSAO.colorAttachment1Handle;
 	}
 	break;
 	}
@@ -743,8 +749,7 @@ void SSAOPass(App* app)
 {
 	glEnable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_BLEND);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, app->ssaoEffect.fbSSAO.handle);
 
@@ -757,6 +762,7 @@ void SSAOPass(App* app)
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	//SSAO Pass
 
 	Program& postProcessSSAOProgram = app->programs[app->postProcessSSAOProgramIdx];
 	glUseProgram(postProcessSSAOProgram.handle);
@@ -766,7 +772,7 @@ void SSAOPass(App* app)
 	GLuint vao = FindVAO(mesh, 0, postProcessSSAOProgram);
 	glBindVertexArray(vao);
 
-	app->ssaoEffect.PassUniformsToShader(app->testFramebuffer.depthAttachmentHandle, app->testFramebuffer.colorAttachment1Handle, app->cam,app);
+	app->ssaoEffect.PassUniformsToSSAOShader(app->testFramebuffer.depthAttachmentHandle, app->testFramebuffer.colorAttachment1Handle, app->cam,app);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
@@ -777,6 +783,46 @@ void SSAOPass(App* app)
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+void SSAOBlurPass(App* app)
+{
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, app->ssaoEffect.fbSSAO.handle);
+
+	//Select on which render targets to draw
+	GLuint drawbuffers[] = {
+		GL_COLOR_ATTACHMENT1,
+	};
+	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
+
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	//SSAO Blur Pass
+
+	Program& postProcessSSAOBlurProgram = app->programs[app->postProcessSSAOBlurProgramIdx];
+	glUseProgram(postProcessSSAOBlurProgram.handle);
+
+	Mesh& mesh = app->meshes[app->screenQuad];
+
+	GLuint vao = FindVAO(mesh, 0, postProcessSSAOBlurProgram);
+	glBindVertexArray(vao);
+
+	app->ssaoEffect.PassUniformsToSSAOBlurShader(app->ssaoEffect.fbSSAO.colorAttachment0Handle,2);
+
+	Submesh& submesh = mesh.submeshes[0];
+	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 
 void LightPass(App* app)
 {
