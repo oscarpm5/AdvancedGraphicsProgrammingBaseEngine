@@ -696,7 +696,7 @@ void GeometryPass(App* app)
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
 	// - clear the framebuffer
-	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	Program& deferredgeometryProgram = app->programs[app->deferredGeometryProgramIdx];
