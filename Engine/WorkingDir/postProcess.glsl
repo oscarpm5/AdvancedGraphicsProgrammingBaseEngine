@@ -28,7 +28,6 @@ uniform mat4 uProjMatrix;//TODO consider passing this matrix as a uniform buffer
 
 uniform sampler2D uNormalTexture;
 uniform sampler2D uPosTexture;
-uniform sampler2D uDepthTexture;
 
 const int MAX_KERNEL_SIZE = 64;
 uniform vec3 uKernel[MAX_KERNEL_SIZE];
@@ -40,10 +39,10 @@ layout(location=0) out vec4 oColor;
 void main()
 {
 	float radius = 0.5;//TODO get this from c++ as a uniform
-	float bias = 0.025;//TODO get this from c++ as a uniform
-
+	float bias = 0.0;//TODO get this from c++ as a uniform
 	float occlusion = 0.0;
-	vec3 normalView =  vec3(normalize(uViewMatrix * vec4(texture(uNormalTexture,vTexCoord).xyz,0.0)));
+
+	vec3 normalView =  vec3(uViewMatrix * vec4(texture(uNormalTexture,vTexCoord).xyz,0.0));
 	vec3 fragPosView = vec3(uViewMatrix * vec4(texture(uPosTexture,vTexCoord).xyz,1.0));
 
 	
@@ -59,8 +58,7 @@ void main()
 		vec3 samplePosView = fragPosView + offsetView*radius;
 
 		//Transform sample to screen space to sample the neighbours texture depth
-		vec4 offset = vec4(samplePosView,1.0);
-		offset = uProjMatrix* offset; //from view to clip space
+		vec4 offset = uProjMatrix * vec4(samplePosView,1.0);//from view to clip space 
 		offset.xyz /= offset.w; //perspective divide
 		offset.xyz = offset.xyz*0.5+0.5; //transform to 0,1 range
 

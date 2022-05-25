@@ -755,7 +755,7 @@ void SSAOPass(App* app)
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 
 	Program& postProcessSSAOProgram = app->programs[app->postProcessSSAOProgramIdx];
@@ -766,19 +766,7 @@ void SSAOPass(App* app)
 	GLuint vao = FindVAO(mesh, 0, postProcessSSAOProgram);
 	glBindVertexArray(vao);
 
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment1Handle);
-	glUniform1i(app->ssaoEffect.uniformNormalTexture, 0);
-
-	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment2Handle);
-	glUniform1i(app->ssaoEffect.uniformPositionTexture, 0);
-
-	glUniform3fv(app->ssaoEffect.uniformKernel, app->ssaoEffect.kernelSSAO.size(),glm::value_ptr(app->ssaoEffect.kernelSSAO[0]));
-	glUniformMatrix4fv(app->ssaoEffect.uniformViewMat,1, GL_FALSE, glm::value_ptr(app->cam.view));
-	glUniformMatrix4fv(app->ssaoEffect.uniformProjMat, 1, GL_FALSE, glm::value_ptr(app->cam.projection));
-
+	app->ssaoEffect.PassUniformsToShader(app->testFramebuffer.colorAttachment2Handle, app->testFramebuffer.colorAttachment1Handle, app->cam);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);

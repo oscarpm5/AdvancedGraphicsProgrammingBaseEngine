@@ -5,6 +5,8 @@
 #include <glad/glad.h>
 #include "platform.h"
 
+class Camera;
+
 struct Framebuffer
 {
 	GLuint handle;
@@ -28,11 +30,11 @@ public:
 	u32 LoadSSAOProgram(App* app);
 
 	void GenerateSSAOKernel(unsigned int kernelSize);
+	void PassUniformsToShader(GLuint gPosTextureHandle,GLuint gNormTextureHandle,Camera& cam);
 
 public:
 	std::vector<glm::vec3> kernelSSAO;
 
-	GLuint uniformDepthTexture;
 	GLuint uniformNormalTexture;
 	GLuint uniformPositionTexture;
 	GLuint uniformKernel;
