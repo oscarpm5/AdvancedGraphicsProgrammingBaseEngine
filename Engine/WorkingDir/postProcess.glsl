@@ -30,7 +30,8 @@ uniform sampler2D uNormalTexture;
 uniform sampler2D uPosTexture;
 uniform sampler2D uRandomVecTexture;
 
-uniform vec3 uKernel[64];
+const int MAX_KERNEL_SIZE = 64;
+uniform vec3 uKernel[MAX_KERNEL_SIZE];
 uniform vec2 uNoiseScale;
 
 layout(location=0) out vec4 oColor;
@@ -54,7 +55,7 @@ void main()
 	vec3 bitangent = cross(normalView,tangent);
 	mat3 TBN = mat3(tangent,bitangent,normalView);
 
-	for(int i =0; i<64; ++i)
+	for(int i =0; i<MAX_KERNEL_SIZE; ++i)
 	{
 		//get neighbour sample pos 
 		vec3 offsetView = TBN * uKernel[i];
@@ -69,10 +70,11 @@ void main()
 		//sample depth
 		float sampleDepth = vec3(uViewMatrix * vec4(texture(uPosTexture,offset.xy).xyz,1.0)).z;
 
-		occlusion += (sampleDepth >= samplePosView.z + bias ? 1.0 : 0.0);  
+		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPosView.z - sampleDepth));
+		occlusion += (sampleDepth >= samplePosView.z + bias ? 1.0 : 0.0)*rangeCheck;  
 	}
 
-	oColor = vec4(vec3(1.0-occlusion/64.0),1.0);
+	oColor = vec4(vec3(1.0-occlusion/float(MAX_KERNEL_SIZE)),1.0);
 
 	//oColor = vec4(randomVec,1.0);	
 }

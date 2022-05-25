@@ -21,7 +21,7 @@ void SSAO::Init(App* app)
 {
 	LoadSSAOProgram(app);
 	GenerateSSAOKernel(64);
-	GenerateSSAONoise(4);
+	GenerateSSAONoise(32);
 
 	fbSSAO = GenerateFrameBuffer(app);
 }
