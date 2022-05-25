@@ -30,16 +30,25 @@ public:
 	u32 LoadSSAOProgram(App* app);
 
 	void GenerateSSAOKernel(unsigned int kernelSize);
-	void PassUniformsToShader(GLuint gPosTextureHandle,GLuint gNormTextureHandle,Camera& cam);
+	void GenerateSSAONoise(unsigned int noiseSamplesAxis);
+
+	void PassUniformsToShader(GLuint gPosTextureHandle,GLuint gNormTextureHandle,Camera& cam, App* app);
 
 public:
 	std::vector<glm::vec3> kernelSSAO;
+	std::vector<glm::vec3> noiseSSAO;
 
 	GLuint uniformNormalTexture;
 	GLuint uniformPositionTexture;
+	GLuint uniformRandomVecTexture;
 	GLuint uniformKernel;
 	GLuint uniformViewMat;
 	GLuint uniformProjMat;
+
+	GLuint uniformNoiseScale;
+
+	GLuint noiseTextureHandle;
+	unsigned int noiseSizeAxis;
 
 	Framebuffer fbSSAO;
 };

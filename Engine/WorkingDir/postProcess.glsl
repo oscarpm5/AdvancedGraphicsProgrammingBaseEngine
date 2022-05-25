@@ -28,26 +28,29 @@ uniform mat4 uProjMatrix;//TODO consider passing this matrix as a uniform buffer
 
 uniform sampler2D uNormalTexture;
 uniform sampler2D uPosTexture;
+uniform sampler2D uRandomVecTexture;
 
 const int MAX_KERNEL_SIZE = 64;
 uniform vec3 uKernel[MAX_KERNEL_SIZE];
-
+uniform vec2 uNoiseScale;
 layout(location=0) out vec4 oColor;
 
 
 
 void main()
 {
-	float radius = 0.5;//TODO get this from c++ as a uniform
+	float radius = 1.0;//TODO get this from c++ as a uniform
 	float bias = 0.0;//TODO get this from c++ as a uniform
+	float noiseScale = 1.0;//TODO get this from c++ as a uniform
+
 	float occlusion = 0.0;
 
 	vec3 normalView =  vec3(uViewMatrix * vec4(texture(uNormalTexture,vTexCoord).xyz,0.0));
 	vec3 fragPosView = vec3(uViewMatrix * vec4(texture(uPosTexture,vTexCoord).xyz,1.0));
-
+	vec3 randomVec = texture(uRandomVecTexture, vTexCoord*uNoiseScale).xyz; 
 	
 	//Create tangent to world basis
-	vec3 tangent = cross(normalView,vec3(0,1,0));
+	vec3 tangent = normalize(randomVec-normalView*dot(randomVec,normalView));
 	vec3 bitangent = cross(normalView,tangent);
 	mat3 TBN = mat3(tangent,bitangent,normalView);
 
@@ -70,7 +73,8 @@ void main()
 	}
 
 	oColor = vec4(1.0-occlusion/float(MAX_KERNEL_SIZE));
-	
+
+	//oColor = vec4(randomVec,1.0);	
 }
 
 
