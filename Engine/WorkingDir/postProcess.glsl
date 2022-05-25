@@ -30,9 +30,9 @@ uniform sampler2D uNormalTexture;
 uniform sampler2D uPosTexture;
 uniform sampler2D uRandomVecTexture;
 
-const int MAX_KERNEL_SIZE = 64;
-uniform vec3 uKernel[MAX_KERNEL_SIZE];
+uniform vec3 uKernel[64];
 uniform vec2 uNoiseScale;
+
 layout(location=0) out vec4 oColor;
 
 
@@ -45,16 +45,16 @@ void main()
 
 	float occlusion = 0.0;
 
-	vec3 normalView =  vec3(uViewMatrix * vec4(texture(uNormalTexture,vTexCoord).xyz,0.0));
-	vec3 fragPosView = vec3(uViewMatrix * vec4(texture(uPosTexture,vTexCoord).xyz,1.0));
 	vec3 randomVec = texture(uRandomVecTexture, vTexCoord*uNoiseScale).xyz; 
+	vec3 fragPosView = vec3(uViewMatrix * vec4(texture(uPosTexture,vTexCoord).xyz,1.0));
+	vec3 normalView =  vec3(uViewMatrix * vec4(texture(uNormalTexture,vTexCoord).xyz,0.0));
 	
 	//Create tangent to world basis
 	vec3 tangent = normalize(randomVec-normalView*dot(randomVec,normalView));
 	vec3 bitangent = cross(normalView,tangent);
 	mat3 TBN = mat3(tangent,bitangent,normalView);
 
-	for(int i =0; i<MAX_KERNEL_SIZE; ++i)
+	for(int i =0; i<64; ++i)
 	{
 		//get neighbour sample pos 
 		vec3 offsetView = TBN * uKernel[i];
@@ -72,7 +72,7 @@ void main()
 		occlusion += (sampleDepth >= samplePosView.z + bias ? 1.0 : 0.0);  
 	}
 
-	oColor = vec4(1.0-occlusion/float(MAX_KERNEL_SIZE));
+	oColor = vec4(vec3(1.0-occlusion/64.0),1.0);
 
 	//oColor = vec4(randomVec,1.0);	
 }

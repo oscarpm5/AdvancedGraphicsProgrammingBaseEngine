@@ -83,7 +83,7 @@ void SSAO::GenerateSSAONoise(unsigned int noiseSamplesAxis)
 
 	glGenTextures(1, &noiseTextureHandle);
 	glBindTexture(GL_TEXTURE_2D, noiseTextureHandle);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, (GLsizei) noiseSamplesAxis, (GLsizei)noiseSamplesAxis, 0, GL_RGB, GL_FLOAT, &noiseSSAO[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, (GLsizei) noiseSamplesAxis, (GLsizei)noiseSamplesAxis, 0, GL_RGB, GL_FLOAT, &noiseSSAO[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
