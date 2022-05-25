@@ -102,11 +102,11 @@ void SSAO::PassUniformsToShader(GLuint gPosTextureHandle, GLuint gNormTextureHan
 
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, gPosTextureHandle);
-	glUniform1i(uniformPositionTexture, 0);
+	glUniform1i(uniformPositionTexture, 1);
 
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, noiseTextureHandle);
-	glUniform1i(uniformRandomVecTexture, 0);
+	glUniform1i(uniformRandomVecTexture, 2);
 
 	glUniform3fv(uniformKernel, kernelSSAO.size(), glm::value_ptr(kernelSSAO[0]));
 	glUniform2f(uniformNoiseScale, ((float)app->displaySize.x / (float)noiseSizeAxis), ((float)app->displaySize.y / (float)noiseSizeAxis));
