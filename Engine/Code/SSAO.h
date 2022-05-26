@@ -4,18 +4,9 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include "platform.h"
+#include "FrameBuffer.h"
 
 class Camera;
-
-struct Framebuffer
-{
-	GLuint handle;
-	GLuint colorAttachment0Handle;
-	GLuint colorAttachment1Handle;
-	GLuint colorAttachment2Handle;
-	GLuint colorAttachment3Handle;
-	GLuint depthAttachmentHandle;
-}; 
 
 struct App;
 

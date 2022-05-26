@@ -60,6 +60,9 @@
     <ClCompile Include="Code\SSAO.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Code\FrameBuffer.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -108,6 +111,9 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Code\SSAO.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\FrameBuffer.h">
       <Filter>Engine</Filter>
     </ClInclude>
   </ItemGroup>
