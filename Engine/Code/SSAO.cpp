@@ -145,11 +145,11 @@ void SSAO::PassUniformsToSSAOShader(GLuint gDepthTextureHandle, GLuint gNormText
 	glUniformMatrix4fv(uniformProjMat, 1, GL_FALSE, glm::value_ptr(cam.projection));
 }
 
-void SSAO::PassUniformsToSSAOBlurShader(u32 kernelHalfSize)
+void SSAO::PassUniformsToSSAOBlurShader()
 {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, ssaoTextureHandle);
 	glUniform1i(uniformBlurInputTexture, 0);
 
-	glUniform1i(uniformBlurKernelHalfSize, kernelHalfSize);
+	glUniform1i(uniformBlurKernelHalfSize, 2);
 }

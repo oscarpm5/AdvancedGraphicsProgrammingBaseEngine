@@ -808,7 +808,7 @@ void SSAOBlurPass(App* app)
 	GLuint vao = FindVAO(mesh, 0, postProcessSSAOBlurProgram);
 	glBindVertexArray(vao);
 
-	app->ssaoEffect.PassUniformsToSSAOBlurShader(2);
+	app->ssaoEffect.PassUniformsToSSAOBlurShader();
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);

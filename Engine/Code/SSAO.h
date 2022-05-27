@@ -27,7 +27,7 @@ public:
 	void GenerateSSAONoise(unsigned int noiseSamplesAxis);
 
 	void PassUniformsToSSAOShader(GLuint gDepthTextureHandle, GLuint gNormTextureHandle, Camera& cam, App* app);
-	void PassUniformsToSSAOBlurShader( u32 kernelHalfSize);
+	void PassUniformsToSSAOBlurShader();
 
 public:
 
