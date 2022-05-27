@@ -48,8 +48,8 @@ void SSAO::GenerateSSAOBuffer(glm::vec2 displaySize)
 
 u32 SSAO::LoadSSAOProgram(App* app)
 {
-	app->postProcessSSAOProgramIdx = LoadProgram(app, "ssao.glsl", "SSAO");
-	Program& postProcessSSAOProgram = app->programs[app->postProcessSSAOProgramIdx];
+	ssaoProgramIdx = LoadProgram(app, "ssao.glsl", "SSAO");
+	Program& postProcessSSAOProgram = app->programs[ssaoProgramIdx];
 	uniformNormalTexture = glGetUniformLocation(postProcessSSAOProgram.handle, "uNormalTexture");
 	uniformDepthTexture = glGetUniformLocation(postProcessSSAOProgram.handle, "uDepthTexture");
 	uniformRandomVecTexture = glGetUniformLocation(postProcessSSAOProgram.handle, "uRandomVecTexture");
@@ -61,17 +61,17 @@ u32 SSAO::LoadSSAOProgram(App* app)
 	uniformNoiseScale = glGetUniformLocation(postProcessSSAOProgram.handle, "uNoiseScale");
 	uniformViewportSize = glGetUniformLocation(postProcessSSAOProgram.handle, "uViewportSize");
 
-	return app->postProcessSSAOProgramIdx;
+	return ssaoProgramIdx;
 }
 
 u32 SSAO::LoadSSAOBlurProgram(App* app)
 {
-	app->postProcessSSAOBlurProgramIdx = LoadProgram(app, "ssao.glsl", "SIMPLE_BLUR");
-	Program& postProcessSSAOBlurProgram = app->programs[app->postProcessSSAOBlurProgramIdx];
+	blurProgramIdx = LoadProgram(app, "ssao.glsl", "SIMPLE_BLUR");
+	Program& postProcessSSAOBlurProgram = app->programs[blurProgramIdx];
 	uniformBlurInputTexture = glGetUniformLocation(postProcessSSAOBlurProgram.handle, "uBlurInputTexture");
 	uniformBlurKernelHalfSize = glGetUniformLocation(postProcessSSAOBlurProgram.handle, "uKernelHalfSize");
 
-	return app->postProcessSSAOBlurProgramIdx;
+	return blurProgramIdx;
 }
 
 void SSAO::GenerateSSAOKernel(unsigned int kernelSize)

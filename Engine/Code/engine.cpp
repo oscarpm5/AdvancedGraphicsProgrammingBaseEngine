@@ -271,18 +271,7 @@ void Init(App* app)
 	Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 	app->texturedMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 
-	app->deferredGeometryProgramIdx = LoadProgram(app, "deferredRendering.glsl", "GEOMETRY_PASS");
-	Program& deferredGeometryIdx = app->programs[app->deferredGeometryProgramIdx];
-	app->deferredGeometry_uTexture = glGetUniformLocation(deferredGeometryIdx.handle, "uTexture");
-
-	app->deferredLightProgramIdx = LoadProgram(app, "deferredRendering.glsl", "LIGHTING_PASS");
-	Program& deferredLightingIdx = app->programs[app->deferredLightProgramIdx];
-	app->deferredLighting_uAlbedo = glGetUniformLocation(deferredLightingIdx.handle, "uAlbedo");
-	app->deferredLighting_uNormal = glGetUniformLocation(deferredLightingIdx.handle, "uNormal");
-	app->deferredLighting_uPosition = glGetUniformLocation(deferredLightingIdx.handle, "uPosition");
-
-	app->deferredLightMeshProgramIdx = LoadProgram(app, "deferredRendering.glsl", "LIGHT_MESH_PASS");
-	Program& deferredLightMeshIdx = app->programs[app->deferredLightMeshProgramIdx];
+	
 
 	//Texture
 	app->diceTexIdx = LoadTexture2D(app, "dice.png");
@@ -344,10 +333,9 @@ void Init(App* app)
 		CreatePointLight(app, color * vec3(3.0), position); //TODO add more
 	}
 
-	app->gBuffer.GenerateGBuffer(app->displaySize);
-
 	app->renderLightMeshes = true;
 
+	app->gBuffer.Init(app);
 	app->ssaoEffect.Init(app, app->displaySize);
 }
 
@@ -703,7 +691,7 @@ void GeometryPass(App* app)
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	Program& deferredgeometryProgram = app->programs[app->deferredGeometryProgramIdx];
+	Program& deferredgeometryProgram = app->programs[app->gBuffer.deferredGeometryProgramIdx];
 	glUseProgram(deferredgeometryProgram.handle);
 
 	for (int n = 0; n < app->entities.size(); ++n)
@@ -718,7 +706,7 @@ void GeometryPass(App* app)
 
 			u32 submeshMaterialIdx = model.materialIdx[i];
 
-			glUniform1i(app->deferredGeometry_uTexture, 0);
+			glUniform1i(app->gBuffer.deferredGeometry_uTexture, 0);
 			Material& submeshMaterial = app->materials[submeshMaterialIdx];
 			glActiveTexture(GL_TEXTURE0);
 
@@ -762,7 +750,7 @@ void SSAOPass(App* app)
 
 	//SSAO Pass
 
-	Program& postProcessSSAOProgram = app->programs[app->postProcessSSAOProgramIdx];
+	Program& postProcessSSAOProgram = app->programs[app->ssaoEffect.ssaoProgramIdx];
 	glUseProgram(postProcessSSAOProgram.handle);
 
 	Mesh& mesh = app->meshes[app->screenQuad];
@@ -800,7 +788,7 @@ void SSAOBlurPass(App* app)
 
 	//SSAO Blur Pass
 
-	Program& postProcessSSAOBlurProgram = app->programs[app->postProcessSSAOBlurProgramIdx];
+	Program& postProcessSSAOBlurProgram = app->programs[app->ssaoEffect.blurProgramIdx];
 	glUseProgram(postProcessSSAOBlurProgram.handle);
 
 	Mesh& mesh = app->meshes[app->screenQuad];
@@ -836,7 +824,7 @@ void LightPass(App* app)
 	};
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
-	Program& deferredlightProgram = app->programs[app->deferredLightProgramIdx];
+	Program& deferredlightProgram = app->programs[app->gBuffer.deferredLightProgramIdx];
 	glUseProgram(deferredlightProgram.handle);
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalParamsSize); //Only once as is used for each object
@@ -851,13 +839,13 @@ void LightPass(App* app)
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, app->gBuffer.colorAttachment0Handle);
-	glUniform1i(app->deferredLighting_uAlbedo, 0);
+	glUniform1i(app->gBuffer.deferredLighting_uAlbedo, 0);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, app->gBuffer.colorAttachment1Handle);
-	glUniform1i(app->deferredLighting_uNormal, 1);
+	glUniform1i(app->gBuffer.deferredLighting_uNormal, 1);
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, app->gBuffer.colorAttachment2Handle);
-	glUniform1i(app->deferredLighting_uPosition, 2);
+	glUniform1i(app->gBuffer.deferredLighting_uPosition, 2);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
@@ -884,7 +872,7 @@ void RenderLightMeshes(App* app)
 	};
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
-	Program& deferredLightMeshProgram = app->programs[app->deferredLightMeshProgramIdx];
+	Program& deferredLightMeshProgram = app->programs[app->gBuffer.deferredLightMeshProgramIdx];
 	glUseProgram(deferredLightMeshProgram.handle);
 
 	//Render lights

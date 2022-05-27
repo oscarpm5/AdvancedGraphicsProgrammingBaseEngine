@@ -9,9 +9,26 @@ GBuffer::~GBuffer()
 {
 }
 
+void GBuffer::Init(App* app)
+{
+	deferredGeometryProgramIdx = LoadProgram(app, "deferredRendering.glsl", "GEOMETRY_PASS");
+	Program& deferredGeometryIdx = app->programs[deferredGeometryProgramIdx];
+	deferredGeometry_uTexture = glGetUniformLocation(deferredGeometryIdx.handle, "uTexture");
+
+	deferredLightProgramIdx = LoadProgram(app, "deferredRendering.glsl", "LIGHTING_PASS");
+	Program& deferredLightingIdx = app->programs[deferredLightProgramIdx];
+	deferredLighting_uAlbedo = glGetUniformLocation(deferredLightingIdx.handle, "uAlbedo");
+	deferredLighting_uNormal = glGetUniformLocation(deferredLightingIdx.handle, "uNormal");
+	deferredLighting_uPosition = glGetUniformLocation(deferredLightingIdx.handle, "uPosition");
+
+	deferredLightMeshProgramIdx = LoadProgram(app, "deferredRendering.glsl", "LIGHT_MESH_PASS");
+	Program& deferredLightMeshIdx = app->programs[deferredLightMeshProgramIdx];
+
+	app->gBuffer.GenerateGBuffer(app->displaySize);
+}
+
 void GBuffer::GenerateGBuffer(glm::vec2 displaySize)
 {
-
 	colorAttachment0Handle = GenerateColTex2DHighPrecision(displaySize);
 	colorAttachment1Handle = GenerateColTex2DHighPrecision(displaySize);
 	colorAttachment2Handle = GenerateColTex2DHighPrecision(displaySize);

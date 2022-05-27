@@ -234,12 +234,8 @@ struct App
 	u32 texturedGeometryProgramIdx;
 	u32 texturedMeshProgramIdx;
 
-	u32 deferredGeometryProgramIdx;
-	u32 deferredLightProgramIdx;
-	u32 deferredLightMeshProgramIdx;
 
-	u32 postProcessSSAOProgramIdx;
-	u32 postProcessSSAOBlurProgramIdx;
+	
 	// texture indices
 	u32 diceTexIdx;
 	u32 whiteTexIdx;
@@ -258,13 +254,7 @@ struct App
 	// Location of the texture uniform in the textured mesh shader
 	GLuint texturedMeshProgram_uTexture;
 
-	//Location of the texture uniform in the deferred geometry shader
-	GLuint deferredGeometry_uTexture;
-
-	//Location of the texture uniforms in the deferred lighting shader
-	GLuint deferredLighting_uAlbedo;
-	GLuint deferredLighting_uNormal;
-	GLuint deferredLighting_uPosition;
+	
 
 	//Patrick Model
 	GLuint model;

@@ -55,4 +55,9 @@ public:
 
 	GLuint uniformBlurInputTexture;
 	GLuint uniformBlurKernelHalfSize;
+
+	//Program Idx
+	u32 ssaoProgramIdx;
+	u32 blurProgramIdx;
+
 };
