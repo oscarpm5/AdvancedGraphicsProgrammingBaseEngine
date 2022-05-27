@@ -336,7 +336,8 @@ void Init(App* app)
 	app->renderLightMeshes = true;
 
 	app->gBuffer.Init(app);
-	app->ssaoEffect.Init(app, app->displaySize);
+	app->ssaoEffect.Init(app);
+	app->bloomEffect.Init(app);
 }
 
 float RandSph()
@@ -380,7 +381,7 @@ void Gui(App* app)
 		ImGui::Checkbox("Display Light Debug Meshes", &app->renderLightMeshes);
 
 		static int current_draw_mode = 3;
-		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Final\0Depth\0SSAO\0SSAOBlured\0\0"))
+		if (ImGui::Combo("Display Render Target", &current_draw_mode, "Albedo\0Normals\0Position\0Final\0Depth\0SSAO\0SSAOBlured\0Bloom\0\0"))
 		{
 			app->displayMode = current_draw_mode;
 		}
@@ -657,6 +658,11 @@ GLuint GetDisplayTexture(App* app)
 	case 6:
 	{
 		return app->ssaoEffect.ssaoBlurTextureHandle;
+	}
+	break;
+	case 7:
+	{
+		return app->bloomEffect.rtBright;
 	}
 	break;
 	}

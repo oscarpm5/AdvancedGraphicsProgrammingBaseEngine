@@ -16,14 +16,14 @@ SSAO::~SSAO()
 {
 }
 
-void SSAO::Init(App* app, glm::vec2 displaySize)
+void SSAO::Init(App* app)
 {
 	LoadSSAOProgram(app);
 	GenerateSSAOKernel(64);
 	GenerateSSAONoise(64);
 
 	LoadSSAOBlurProgram(app);
-	GenerateSSAOBuffer(displaySize);
+	GenerateSSAOBuffer(app->displaySize);
 }
 
 void SSAO::GenerateSSAOBuffer(glm::vec2 displaySize)

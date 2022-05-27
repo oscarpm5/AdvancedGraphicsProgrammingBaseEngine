@@ -8,7 +8,6 @@ public:
 	Framebuffer();
 
 	bool Generate();
-	void Clear();
 
 	bool CheckStatus();//returns true if framebuffer has not errors
 
@@ -16,6 +15,8 @@ public:
 	void Release();
 	void AddColorAttachment(GLenum colorAttachment, GLuint texture, GLuint lod);
 	void AddDepthAttachment(GLuint texture);
+
+	void Clear();
 
 public:
 	GLuint handle;

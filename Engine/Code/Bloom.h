@@ -10,12 +10,14 @@ struct App;
 class Bloom
 {
 public:
-	Bloom();
 
+	Bloom();
 	void Init(App* app);
-	void GenerateMipmapTexture(GLuint* handle, glm::vec2 dimensions);
 
 private:
+	void GenerateMipmapTexture(GLuint* handle, glm::vec2 dimensions);
+
+public:
 
 	//Program Indices
 	u32 blitBrightestPixelsProgramIdx;

@@ -7,6 +7,7 @@
 #include "platform.h"
 #include "gBuffer.h"
 #include "SSAO.h"
+#include "Bloom.h"
 #include "assimp_model_loading.h"
 #include <glad/glad.h>
 
@@ -203,7 +204,7 @@ struct Framebuffer;
 struct App
 {
 	SSAO ssaoEffect;
-
+	Bloom bloomEffect;
 	// Loop
 	f32  deltaTime;
 	bool isRunning;

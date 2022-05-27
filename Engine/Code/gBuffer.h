@@ -13,6 +13,7 @@ public:
 
 	void Init(App* app);
 
+private:
 	void GenerateGBuffer(glm::vec2 displaySize);
 
 public:

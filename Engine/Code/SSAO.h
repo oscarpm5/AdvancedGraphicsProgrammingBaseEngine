@@ -16,18 +16,19 @@ public:
 	SSAO();
 	~SSAO();
 
-	void Init(App* app, glm::vec2 displaySize);
+	void Init(App* app);
+	
+	void PassUniformsToSSAOShader(GLuint gDepthTextureHandle, GLuint gNormTextureHandle, Camera& cam, App* app);
+	void PassUniformsToSSAOBlurShader();
 
+private:
 	void GenerateSSAOBuffer(glm::vec2 displaySize);
-
 	u32 LoadSSAOProgram(App* app);
 	u32 LoadSSAOBlurProgram(App* app);
 
 	void GenerateSSAOKernel(unsigned int kernelSize);
 	void GenerateSSAONoise(unsigned int noiseSamplesAxis);
 
-	void PassUniformsToSSAOShader(GLuint gDepthTextureHandle, GLuint gNormTextureHandle, Camera& cam, App* app);
-	void PassUniformsToSSAOBlurShader();
 
 public:
 
