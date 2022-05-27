@@ -1,4 +1,3 @@
-
 #include "SSAO.h"
 #include "engine.h"
 #include<random>
@@ -17,15 +16,34 @@ SSAO::~SSAO()
 {
 }
 
-void SSAO::Init(App* app)
+void SSAO::Init(App* app, glm::vec2 displaySize)
 {
 	LoadSSAOProgram(app);
 	GenerateSSAOKernel(64);
 	GenerateSSAONoise(64);
 
 	LoadSSAOBlurProgram(app);
+	GenerateSSAOBuffer(displaySize);
+}
 
-	fbSSAO = GenerateFrameBuffer(app);
+void SSAO::GenerateSSAOBuffer(glm::vec2 displaySize)
+{
+	frameBuffer.Generate();
+	frameBuffer.Bind();
+
+	ssaoTextureHandle = GenerateColTex2DHighPrecision(displaySize);
+	ssaoBlurTextureHandle = GenerateColTex2DHighPrecision(displaySize);
+
+	frameBuffer.AddColorAttachment(GL_COLOR_ATTACHMENT0, ssaoTextureHandle, 0);//SSAO
+	frameBuffer.AddColorAttachment(GL_COLOR_ATTACHMENT1, ssaoBlurTextureHandle, 0); //BLURED SSAO
+
+	frameBuffer.CheckStatus();
+
+	GLenum buffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1 };
+	glDrawBuffers(ARRAY_COUNT(buffers), buffers);
+
+	frameBuffer.Release();
+
 }
 
 u32 SSAO::LoadSSAOProgram(App* app)
@@ -42,7 +60,6 @@ u32 SSAO::LoadSSAOProgram(App* app)
 
 	uniformNoiseScale = glGetUniformLocation(postProcessSSAOProgram.handle, "uNoiseScale");
 	uniformViewportSize = glGetUniformLocation(postProcessSSAOProgram.handle, "uViewportSize");
-	
 
 	return app->postProcessSSAOProgramIdx;
 }
@@ -96,12 +113,11 @@ void SSAO::GenerateSSAONoise(unsigned int noiseSamplesAxis)
 
 	glGenTextures(1, &noiseTextureHandle);
 	glBindTexture(GL_TEXTURE_2D, noiseTextureHandle);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, (GLsizei) noiseSamplesAxis, (GLsizei)noiseSamplesAxis, 0, GL_RGB, GL_FLOAT, &noiseSSAO[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, (GLsizei)noiseSamplesAxis, (GLsizei)noiseSamplesAxis, 0, GL_RGB, GL_FLOAT, &noiseSSAO[0]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
 
 	noiseSizeAxis = noiseSamplesAxis;
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -125,17 +141,14 @@ void SSAO::PassUniformsToSSAOShader(GLuint gDepthTextureHandle, GLuint gNormText
 	glUniform2f(uniformNoiseScale, ((float)app->displaySize.x / (float)noiseSizeAxis), ((float)app->displaySize.y / (float)noiseSizeAxis));
 	glUniform2f(uniformViewportSize, (float)app->displaySize.x, (float)app->displaySize.y);
 
-
-	
 	glUniformMatrix4fv(uniformViewMat, 1, GL_FALSE, glm::value_ptr(cam.view));
 	glUniformMatrix4fv(uniformProjMat, 1, GL_FALSE, glm::value_ptr(cam.projection));
-
 }
 
-void SSAO::PassUniformsToSSAOBlurShader(GLuint textureToBlurHandle, u32 kernelHalfSize)
+void SSAO::PassUniformsToSSAOBlurShader(u32 kernelHalfSize)
 {
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textureToBlurHandle);
+	glBindTexture(GL_TEXTURE_2D, ssaoTextureHandle);
 	glUniform1i(uniformBlurInputTexture, 0);
 
 	glUniform1i(uniformBlurKernelHalfSize, kernelHalfSize);

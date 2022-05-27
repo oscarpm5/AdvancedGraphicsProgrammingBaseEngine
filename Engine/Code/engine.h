@@ -5,6 +5,7 @@
 #pragma once
 
 #include "platform.h"
+#include "gBuffer.h"
 #include "SSAO.h"
 #include "assimp_model_loading.h"
 #include <glad/glad.h>
@@ -287,7 +288,7 @@ struct App
 	u32 globalParamsoffset;
 	u32 globalParamsSize;
 
-	Framebuffer testFramebuffer;
+	GBuffer gBuffer;
 
 	//Texture Display mode
 	u32 displayMode;
@@ -355,8 +356,6 @@ u32 AddEntity(App* app, const char* name, u32 modelIndex);
 
 Light* CreateDirectionalLight(App* app, vec3 color, vec3 direction);
 Light* CreatePointLight(App* app, vec3 color, vec3 position);
-
-Framebuffer GenerateFrameBuffer(App* app);
 
 GLuint GenerateColTex2D(vec2 displaySize);
 

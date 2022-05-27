@@ -16,7 +16,9 @@ public:
 	SSAO();
 	~SSAO();
 
-	void Init(App* app);
+	void Init(App* app, glm::vec2 displaySize);
+
+	void GenerateSSAOBuffer(glm::vec2 displaySize);
 
 	u32 LoadSSAOProgram(App* app);
 	u32 LoadSSAOBlurProgram(App* app);
@@ -24,14 +26,15 @@ public:
 	void GenerateSSAOKernel(unsigned int kernelSize);
 	void GenerateSSAONoise(unsigned int noiseSamplesAxis);
 
-	void PassUniformsToSSAOShader(GLuint gDepthTextureHandle,GLuint gNormTextureHandle,Camera& cam, App* app);
-	void PassUniformsToSSAOBlurShader(GLuint textureToBlurHandle, u32 kernelHalfSize);
-
+	void PassUniformsToSSAOShader(GLuint gDepthTextureHandle, GLuint gNormTextureHandle, Camera& cam, App* app);
+	void PassUniformsToSSAOBlurShader( u32 kernelHalfSize);
 
 public:
 
-	Framebuffer fbSSAO;
-	
+	Framebuffer frameBuffer;
+	GLuint ssaoTextureHandle;
+	GLuint ssaoBlurTextureHandle;
+
 	//SSAO
 	std::vector<glm::vec3> kernelSSAO;
 	std::vector<glm::vec3> noiseSSAO;
@@ -52,6 +55,4 @@ public:
 
 	GLuint uniformBlurInputTexture;
 	GLuint uniformBlurKernelHalfSize;
-
 };
-

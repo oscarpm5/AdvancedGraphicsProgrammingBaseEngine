@@ -284,8 +284,6 @@ void Init(App* app)
 	app->deferredLightMeshProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHT_MESH_PASS");
 	Program& deferredLightMeshIdx = app->programs[app->deferredLightMeshProgramIdx];
 
-	
-
 	//Texture
 	app->diceTexIdx = LoadTexture2D(app, "dice.png");
 	app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
@@ -346,11 +344,11 @@ void Init(App* app)
 		CreatePointLight(app, color * vec3(3.0), position); //TODO add more
 	}
 
-	app->testFramebuffer = GenerateFrameBuffer(app);
+	app->gBuffer.GenerateGBuffer(app->displaySize);
 
 	app->renderLightMeshes = true;
 
-	app->ssaoEffect.Init(app);
+	app->ssaoEffect.Init(app, app->displaySize);
 }
 
 float RandSph()
@@ -640,43 +638,43 @@ GLuint GetDisplayTexture(App* app)
 	{
 	case 0:
 	{
-		return app->testFramebuffer.colorAttachment0Handle;
+		return app->gBuffer.colorAttachment0Handle;
 	}
 	break;
 	case 1:
 	{
-		return app->testFramebuffer.colorAttachment1Handle;
+		return app->gBuffer.colorAttachment1Handle;
 	}
 	break;
 	case 2:
 	{
-		return app->testFramebuffer.colorAttachment2Handle;
+		return app->gBuffer.colorAttachment2Handle;
 	}
 	break;
 	case 3:
 	{
-		return app->testFramebuffer.colorAttachment3Handle;
+		return app->gBuffer.colorAttachment3Handle;
 	}
 	break;
 	case 4:
 	{
-		return app->testFramebuffer.depthAttachmentHandle;
+		return app->gBuffer.depthAttachmentHandle;
 	}
 	break;
 	case 5:
 	{
-		return app->ssaoEffect.fbSSAO.colorAttachment0Handle;
+		return app->ssaoEffect.ssaoTextureHandle;
 	}
 	break;
 	case 6:
 	{
-		return app->ssaoEffect.fbSSAO.colorAttachment1Handle;
+		return app->ssaoEffect.ssaoBlurTextureHandle;
 	}
 	break;
 	}
 
 	ELOG("No display mode selected!");
-	return app->testFramebuffer.colorAttachment3Handle;
+	return app->gBuffer.colorAttachment3Handle;
 }
 
 void GeometryPass(App* app)
@@ -688,7 +686,7 @@ void GeometryPass(App* app)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Render on this framebuffer render targets
-	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
+	app->gBuffer.frameBuffer.Bind();
 
 	//Select on which render targets to draw
 	GLuint drawbuffers[] = {
@@ -742,7 +740,7 @@ void GeometryPass(App* app)
 
 	glBindVertexArray(0);
 	glUseProgram(0);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	app->gBuffer.frameBuffer.Release();
 }
 
 void SSAOPass(App* app)
@@ -751,11 +749,11 @@ void SSAOPass(App* app)
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, app->ssaoEffect.fbSSAO.handle);
+	app->ssaoEffect.frameBuffer.Bind();
 
 	//Select on which render targets to draw
 	GLuint drawbuffers[] = {
-		GL_COLOR_ATTACHMENT0, 
+		GL_COLOR_ATTACHMENT0,
 	};
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
@@ -772,7 +770,7 @@ void SSAOPass(App* app)
 	GLuint vao = FindVAO(mesh, 0, postProcessSSAOProgram);
 	glBindVertexArray(vao);
 
-	app->ssaoEffect.PassUniformsToSSAOShader(app->testFramebuffer.depthAttachmentHandle, app->testFramebuffer.colorAttachment1Handle, app->cam,app);
+	app->ssaoEffect.PassUniformsToSSAOShader(app->gBuffer.depthAttachmentHandle, app->gBuffer.colorAttachment1Handle, app->cam, app);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
@@ -780,8 +778,7 @@ void SSAOPass(App* app)
 	glBindVertexArray(0);
 	glUseProgram(0);
 
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	app->ssaoEffect.frameBuffer.Release();
 }
 
 void SSAOBlurPass(App* app)
@@ -790,7 +787,7 @@ void SSAOBlurPass(App* app)
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, app->ssaoEffect.fbSSAO.handle);
+	app->ssaoEffect.frameBuffer.Bind();
 
 	//Select on which render targets to draw
 	GLuint drawbuffers[] = {
@@ -811,7 +808,7 @@ void SSAOBlurPass(App* app)
 	GLuint vao = FindVAO(mesh, 0, postProcessSSAOBlurProgram);
 	glBindVertexArray(vao);
 
-	app->ssaoEffect.PassUniformsToSSAOBlurShader(app->ssaoEffect.fbSSAO.colorAttachment0Handle,2);
+	app->ssaoEffect.PassUniformsToSSAOBlurShader(2);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
@@ -819,10 +816,8 @@ void SSAOBlurPass(App* app)
 	glBindVertexArray(0);
 	glUseProgram(0);
 
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	app->ssaoEffect.frameBuffer.Release();
 }
-
 
 void LightPass(App* app)
 {
@@ -833,7 +828,7 @@ void LightPass(App* app)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	//Render on this framebuffer render targets
-	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
+	app->gBuffer.frameBuffer.Bind();
 
 	//Select on which render targets to draw
 	GLuint drawbuffers[] = {
@@ -855,13 +850,13 @@ void LightPass(App* app)
 	glBindVertexArray(vao);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment0Handle);
+	glBindTexture(GL_TEXTURE_2D, app->gBuffer.colorAttachment0Handle);
 	glUniform1i(app->deferredLighting_uAlbedo, 0);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment1Handle);
+	glBindTexture(GL_TEXTURE_2D, app->gBuffer.colorAttachment1Handle);
 	glUniform1i(app->deferredLighting_uNormal, 1);
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, app->testFramebuffer.colorAttachment2Handle);
+	glBindTexture(GL_TEXTURE_2D, app->gBuffer.colorAttachment2Handle);
 	glUniform1i(app->deferredLighting_uPosition, 2);
 
 	Submesh& submesh = mesh.submeshes[0];
@@ -870,7 +865,7 @@ void LightPass(App* app)
 	glBindVertexArray(0);
 	glUseProgram(0);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	app->gBuffer.frameBuffer.Release();
 }
 
 void RenderLightMeshes(App* app)
@@ -881,7 +876,7 @@ void RenderLightMeshes(App* app)
 	glBlendFunc(GL_ONE, GL_ONE);
 
 	//Render on this framebuffer render targets
-	glBindFramebuffer(GL_FRAMEBUFFER, app->testFramebuffer.handle);
+	app->gBuffer.frameBuffer.Bind();
 
 	//Select on which render targets to draw
 	GLuint drawbuffers[] = {
@@ -920,7 +915,7 @@ void RenderLightMeshes(App* app)
 		}
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	app->gBuffer.frameBuffer.Release();
 }
 
 void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth)
@@ -1272,52 +1267,52 @@ Light* CreatePointLight(App* app, vec3 color, vec3 position)
 
 	return &app->lights.back();
 }
-
-Framebuffer GenerateFrameBuffer(App* app)
-{
-	Framebuffer ret;
-
-	ret.colorAttachment0Handle = GenerateColTex2DHighPrecision(app->displaySize);
-	ret.colorAttachment1Handle = GenerateColTex2DHighPrecision(app->displaySize);
-	ret.colorAttachment2Handle = GenerateColTex2DHighPrecision(app->displaySize);
-	ret.colorAttachment3Handle = GenerateColTex2DHighPrecision(app->displaySize);
-
-	ret.depthAttachmentHandle = GenerateDepthTex2D(app->displaySize);
-
-	ret.handle;
-	glGenFramebuffers(1, &ret.handle);
-	glBindFramebuffer(GL_FRAMEBUFFER, ret.handle);
-	//TODO make framebuffers generate attachments needed from a parameter
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ret.colorAttachment0Handle, 0); //Albedo
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, ret.colorAttachment1Handle, 0); //Normal
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, ret.colorAttachment2Handle, 0); //Position
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, ret.colorAttachment3Handle, 0); //Radiance
-
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, ret.depthAttachmentHandle, 0);
-
-	GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-	if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE)
-	{
-		switch (framebufferStatus)
-		{
-		case GL_FRAMEBUFFER_UNDEFINED: ELOG("GL_FRAMEBUFFER_UNDEFINED"); break;
-		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: ELOG("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"); break;
-		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: ELOG("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"); break;
-		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: ELOG("GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"); break;
-		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: ELOG("GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"); break;
-		case GL_FRAMEBUFFER_UNSUPPORTED: ELOG("GL_FRAMEBUFFER_UNSUPPORTED"); break;
-		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: ELOG("GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"); break;
-		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: ELOG("GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"); break;
-		default: ELOG("Unknown framebuffer status error");
-		}
-	}
-
-	GLenum buffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
-	glDrawBuffers(ARRAY_COUNT(buffers), buffers);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-	return ret;
-}
+//
+//Framebuffer GenerateFrameBuffer(App* app)
+//{
+//	Framebuffer ret;
+//
+//	ret.colorAttachment0Handle = GenerateColTex2DHighPrecision(app->displaySize);
+//	ret.colorAttachment1Handle = GenerateColTex2DHighPrecision(app->displaySize);
+//	ret.colorAttachment2Handle = GenerateColTex2DHighPrecision(app->displaySize);
+//	ret.colorAttachment3Handle = GenerateColTex2DHighPrecision(app->displaySize);
+//
+//	ret.depthAttachmentHandle = GenerateDepthTex2D(app->displaySize);
+//
+//	ret.handle;
+//	glGenFramebuffers(1, &ret.handle);
+//	glBindFramebuffer(GL_FRAMEBUFFER, ret.handle);
+//	//TODO make framebuffers generate attachments needed from a parameter
+//	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ret.colorAttachment0Handle, 0); //Albedo
+//	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, ret.colorAttachment1Handle, 0); //Normal
+//	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, ret.colorAttachment2Handle, 0); //Position
+//	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, ret.colorAttachment3Handle, 0); //Radiance
+//
+//	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, ret.depthAttachmentHandle, 0);
+//
+//	GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+//	if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE)
+//	{
+//		switch (framebufferStatus)
+//		{
+//		case GL_FRAMEBUFFER_UNDEFINED: ELOG("GL_FRAMEBUFFER_UNDEFINED"); break;
+//		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: ELOG("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"); break;
+//		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: ELOG("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT"); break;
+//		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: ELOG("GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"); break;
+//		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: ELOG("GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER"); break;
+//		case GL_FRAMEBUFFER_UNSUPPORTED: ELOG("GL_FRAMEBUFFER_UNSUPPORTED"); break;
+//		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: ELOG("GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE"); break;
+//		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: ELOG("GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS"); break;
+//		default: ELOG("Unknown framebuffer status error");
+//		}
+//	}
+//
+//	GLenum buffers[] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1,GL_COLOR_ATTACHMENT2,GL_COLOR_ATTACHMENT3 };
+//	glDrawBuffers(ARRAY_COUNT(buffers), buffers);
+//	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//
+//	return ret;
+//}
 
 GLuint GenerateColTex2D(vec2 displaySize)
 {

@@ -58,3 +58,8 @@ void Framebuffer::AddColorAttachment(GLenum colorAttachment, GLuint texture, GLu
 {
 	glFramebufferTexture2D(GL_FRAMEBUFFER, colorAttachment, GL_TEXTURE_2D, texture, lod);
 }
+
+void Framebuffer::AddDepthAttachment(GLuint texture)
+{
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture, 0);
+}
