@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 #include <glad/glad.h>
 
 class Framebuffer
@@ -13,10 +14,9 @@ public:
 
 	void Bind();
 	void Release();
-	void AddColorAttachment(GLenum colorAttachment, GLuint texture,GLuint lod); //TODO complete
+	void AddColorAttachment(GLenum colorAttachment, GLuint texture,GLuint lod);
 
 public:
-
 	GLuint handle;
 	GLuint colorAttachment0Handle;
 	GLuint colorAttachment1Handle;

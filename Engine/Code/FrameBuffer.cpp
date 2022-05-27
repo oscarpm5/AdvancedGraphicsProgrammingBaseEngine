@@ -1,5 +1,5 @@
-#include "FrameBuffer.h"
 #include "platform.h"
+#include "FrameBuffer.h"
 
 Framebuffer::Framebuffer()
 {
@@ -24,7 +24,6 @@ void Framebuffer::Clear()
 bool Framebuffer::CheckStatus()
 {
 	bool ret = true;
-	Bind();
 	GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE)
 	{
@@ -42,8 +41,6 @@ bool Framebuffer::CheckStatus()
 		}
 		ret = false;
 	}
-	Release();
-
 	return ret;
 }
 
@@ -55,4 +52,9 @@ void Framebuffer::Bind()
 void Framebuffer::Release()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Framebuffer::AddColorAttachment(GLenum colorAttachment, GLuint texture, GLuint lod)
+{
+	glFramebufferTexture2D(GL_FRAMEBUFFER, colorAttachment, GL_TEXTURE_2D, texture, lod);
 }
