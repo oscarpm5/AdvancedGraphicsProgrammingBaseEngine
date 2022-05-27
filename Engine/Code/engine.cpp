@@ -262,26 +262,26 @@ void Init(App* app)
 	// - textures
 
 	//Program
-	app->texturedGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "TEXTURED_GEOMETRY");
+	app->texturedGeometryProgramIdx = LoadProgram(app, "deferredRendering.glsl", "TEXTURED_GEOMETRY");
 	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
 	app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
 	app->programUniformIsDepth = glGetUniformLocation(texturedGeometryProgram.handle, "isDepth");
 
-	app->texturedMeshProgramIdx = LoadProgram(app, "shaders.glsl", "SHOW_TEXTURED_MESH");
+	app->texturedMeshProgramIdx = LoadProgram(app, "deferredRendering.glsl", "SHOW_TEXTURED_MESH");
 	Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 	app->texturedMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 
-	app->deferredGeometryProgramIdx = LoadProgram(app, "shaders.glsl", "GEOMETRY_PASS");
+	app->deferredGeometryProgramIdx = LoadProgram(app, "deferredRendering.glsl", "GEOMETRY_PASS");
 	Program& deferredGeometryIdx = app->programs[app->deferredGeometryProgramIdx];
 	app->deferredGeometry_uTexture = glGetUniformLocation(deferredGeometryIdx.handle, "uTexture");
 
-	app->deferredLightProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHTING_PASS");
+	app->deferredLightProgramIdx = LoadProgram(app, "deferredRendering.glsl", "LIGHTING_PASS");
 	Program& deferredLightingIdx = app->programs[app->deferredLightProgramIdx];
 	app->deferredLighting_uAlbedo = glGetUniformLocation(deferredLightingIdx.handle, "uAlbedo");
 	app->deferredLighting_uNormal = glGetUniformLocation(deferredLightingIdx.handle, "uNormal");
 	app->deferredLighting_uPosition = glGetUniformLocation(deferredLightingIdx.handle, "uPosition");
 
-	app->deferredLightMeshProgramIdx = LoadProgram(app, "shaders.glsl", "LIGHT_MESH_PASS");
+	app->deferredLightMeshProgramIdx = LoadProgram(app, "deferredRendering.glsl", "LIGHT_MESH_PASS");
 	Program& deferredLightMeshIdx = app->programs[app->deferredLightMeshProgramIdx];
 
 	//Texture

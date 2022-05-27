@@ -66,6 +66,9 @@
     <ClCompile Include="Code\gBuffer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Code\Bloom.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -122,12 +125,18 @@
     <ClInclude Include="Code\gBuffer.h">
       <Filter>Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Code\Bloom.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="WorkingDir\shaders.glsl">
+    <None Include="WorkingDir\deferredRendering.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="WorkingDir\postProcess.glsl">
+    <None Include="WorkingDir\ssao.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\bloom.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

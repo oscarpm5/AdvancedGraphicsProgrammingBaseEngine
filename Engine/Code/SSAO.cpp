@@ -48,7 +48,7 @@ void SSAO::GenerateSSAOBuffer(glm::vec2 displaySize)
 
 u32 SSAO::LoadSSAOProgram(App* app)
 {
-	app->postProcessSSAOProgramIdx = LoadProgram(app, "postProcess.glsl", "SSAO");
+	app->postProcessSSAOProgramIdx = LoadProgram(app, "ssao.glsl", "SSAO");
 	Program& postProcessSSAOProgram = app->programs[app->postProcessSSAOProgramIdx];
 	uniformNormalTexture = glGetUniformLocation(postProcessSSAOProgram.handle, "uNormalTexture");
 	uniformDepthTexture = glGetUniformLocation(postProcessSSAOProgram.handle, "uDepthTexture");
@@ -66,7 +66,7 @@ u32 SSAO::LoadSSAOProgram(App* app)
 
 u32 SSAO::LoadSSAOBlurProgram(App* app)
 {
-	app->postProcessSSAOBlurProgramIdx = LoadProgram(app, "postProcess.glsl", "SIMPLE_BLUR");
+	app->postProcessSSAOBlurProgramIdx = LoadProgram(app, "ssao.glsl", "SIMPLE_BLUR");
 	Program& postProcessSSAOBlurProgram = app->programs[app->postProcessSSAOBlurProgramIdx];
 	uniformBlurInputTexture = glGetUniformLocation(postProcessSSAOBlurProgram.handle, "uBlurInputTexture");
 	uniformBlurKernelHalfSize = glGetUniformLocation(postProcessSSAOBlurProgram.handle, "uKernelHalfSize");

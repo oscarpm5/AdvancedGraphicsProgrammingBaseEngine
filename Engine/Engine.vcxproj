@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Code\assimp_model_loading.cpp" />
+    <ClCompile Include="Code\Bloom.cpp" />
     <ClCompile Include="Code\buffer_management.cpp" />
     <ClCompile Include="Code\engine.cpp" />
     <ClCompile Include="Code\FrameBuffer.cpp" />
@@ -38,6 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Code\assimp_model_loading.h" />
+    <ClInclude Include="Code\Bloom.h" />
     <ClInclude Include="Code\buffer_management.h" />
     <ClInclude Include="Code\engine.h" />
     <ClInclude Include="Code\FrameBuffer.h" />
@@ -57,8 +59,9 @@
     <ClInclude Include="ThirdParty\stb\stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="WorkingDir\postProcess.glsl" />
-    <None Include="WorkingDir\shaders.glsl" />
+    <None Include="WorkingDir\bloom.glsl" />
+    <None Include="WorkingDir\deferredRendering.glsl" />
+    <None Include="WorkingDir\ssao.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
