@@ -13,9 +13,10 @@ public:
 
 	Bloom();
 	void Init(App* app);
+	void PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inputTexture,float threshold);
 
 private:
-	void GenerateMipmapTexture(GLuint* handle, glm::vec2 dimensions);
+	void GenerateMipmapTexture(GLuint& handle, glm::vec2 dimensions);
 
 public:
 
@@ -34,5 +35,11 @@ public:
 	Framebuffer fboBloom3;
 	Framebuffer fboBloom4;
 	Framebuffer fboBloom5;
+
+	//Uniforms------------------------------------
+	//BrightPixels
+	GLuint uniformColorTexture;
+	GLuint uniformThreshold;
+
 
 };

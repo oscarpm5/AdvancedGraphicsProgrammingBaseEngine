@@ -612,6 +612,7 @@ void DeferredRender(App* app)
 	SSAOPass(app);
 	SSAOBlurPass(app);
 	LightPass(app);
+	BloomPass(app);
 
 	if (app->renderLightMeshes == true)
 	{
@@ -751,6 +752,9 @@ void SSAOPass(App* app)
 	};
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -789,6 +793,9 @@ void SSAOBlurPass(App* app)
 	};
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -813,6 +820,51 @@ void SSAOBlurPass(App* app)
 	app->ssaoEffect.frameBuffer.Release();
 }
 
+void BloomPass(App* app)
+{
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+	app->bloomEffect.fboBloom1.Bind();
+
+	//Select on which render targets to draw
+	GLuint drawbuffers[] = {
+		GL_COLOR_ATTACHMENT0,
+	};
+
+	glm::vec2 viewport = glm::vec2((float)app->displaySize.x / 2.0, (float)app->displaySize.y / 2.0);
+
+	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
+
+	glViewport(0, 0, viewport.x, viewport.y);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	Program& blitBrightestPixelsProgram = app->programs[app->bloomEffect.blitBrightestPixelsProgramIdx];
+	glUseProgram(blitBrightestPixelsProgram.handle);
+
+	Mesh& mesh = app->meshes[app->screenQuad];
+
+	GLuint vao = FindVAO(mesh, 0, blitBrightestPixelsProgram);
+	glBindVertexArray(vao);
+
+	app->bloomEffect.PassUniformsToBrightestPixelsShader(viewport,app->gBuffer.colorAttachment3Handle,0.9f);
+
+	Submesh& submesh = mesh.submeshes[0];
+	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	app->bloomEffect.fboBloom1.Release();
+
+
+
+}
+
 void LightPass(App* app)
 {
 	glEnable(GL_CULL_FACE);
@@ -829,6 +881,9 @@ void LightPass(App* app)
 		GL_COLOR_ATTACHMENT3, //radiance, illuminated scene
 	};
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
+
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
 
 	Program& deferredlightProgram = app->programs[app->gBuffer.deferredLightProgramIdx];
 	glUseProgram(deferredlightProgram.handle);
@@ -878,6 +933,9 @@ void RenderLightMeshes(App* app)
 	};
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+
 	Program& deferredLightMeshProgram = app->programs[app->gBuffer.deferredLightMeshProgramIdx];
 	glUseProgram(deferredLightMeshProgram.handle);
 
@@ -923,6 +981,9 @@ void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth)
 
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
 
 	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
 	glUseProgram(texturedGeometryProgram.handle);

@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////
 
-#ifdef SIMPLE_BLUR
+#ifdef BRIGHTEST_PIXELS
 
 #if defined(VERTEX) ///////////////////////////////////////////////////
 
@@ -25,28 +25,20 @@ void main()
 // TODO: Write your fragment shader here
 in vec2 vTexCoord;
 
-uniform sampler2D uBlurInputTexture;
-uniform int uKernelHalfSize;
+uniform sampler2D uColorTexture;
+uniform float uThreshold;
 
 layout(location=0) out vec4 oColor;
 
 void main()
 {    
-	vec2 texelSize = 1.0 / vec2(textureSize(uBlurInputTexture, 0));
-
-	float result = 0.0;
-    for (int x = -uKernelHalfSize; x < uKernelHalfSize; ++x) 
-    {
-        for (int y = -uKernelHalfSize; y < uKernelHalfSize; ++y) 
-        {
-            vec2 offset = vec2(float(x), float(y)) * texelSize;
-            result += texture(uBlurInputTexture, vTexCoord + offset).r;
-        }
-    }
-
-	int kernelSize = uKernelHalfSize * 2;
-	result = result / float(kernelSize*kernelSize);
-	oColor = vec4(result,result,result,1.0);
+	vec3 luminances = vec3(0.2126,0.7152,0.0722);
+	vec4 texel =texture2D(uColorTexture, vTexCoord);
+	float luminance = dot(luminances,texel.rgb);
+	luminance = max(0.0,luminance - uThreshold);
+	texel.rgb *= sign(luminance);
+	texel.a = 1.0;
+	oColor = texel;
 }
 
 

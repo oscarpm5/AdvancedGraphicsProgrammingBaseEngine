@@ -322,6 +322,8 @@ void SSAOPass(App* app);
 
 void SSAOBlurPass(App* app);
 
+void BloomPass(App* app);
+
 void LightPass(App* app);
 
 void RenderLightMeshes(App* app);

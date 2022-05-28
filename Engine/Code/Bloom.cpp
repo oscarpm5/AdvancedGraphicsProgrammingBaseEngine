@@ -12,12 +12,27 @@ void Bloom::Init(App* app)
 
 
 	blitBrightestPixelsProgramIdx = LoadProgram(app, "bloom.glsl", "BRIGHTEST_PIXELS");
+	Program& blitBrightestPixelsProgram = app->programs[blitBrightestPixelsProgramIdx];
+	uniformColorTexture = glGetUniformLocation(blitBrightestPixelsProgram.handle, "uColorTexture");
+	uniformThreshold = glGetUniformLocation(blitBrightestPixelsProgram.handle, "uThreshold");
+
+
 	blurProgramIdx = LoadProgram(app, "bloom.glsl", "BLUR");
 	bloomProgramIdx = LoadProgram(app, "bloom.glsl", "BLOOM");
 
 
-	GenerateMipmapTexture(&rtBright, app->displaySize);
-	GenerateMipmapTexture(&rtBlurH, app->displaySize);
+
+
+
+	GenerateMipmapTexture(rtBright, app->displaySize);
+	GenerateMipmapTexture(rtBlurH, app->displaySize);
+
+	fboBloom1.Generate();
+	fboBloom2.Generate();
+	fboBloom3.Generate();
+	fboBloom4.Generate();
+	fboBloom5.Generate();
+
 
 	fboBloom1.Bind();
 	fboBloom1.AddColorAttachment(GL_COLOR_ATTACHMENT0, rtBright, 0);
@@ -51,14 +66,24 @@ void Bloom::Init(App* app)
 
 }
 
-void Bloom::GenerateMipmapTexture(GLuint* handle, glm::vec2 dimensions)
+void Bloom::PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inputTexture, float threshold)
+{
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, inputTexture);
+	glUniform1i(uniformColorTexture, 0);
+
+	glUniform1f(uniformThreshold, threshold);
+
+}
+
+void Bloom::GenerateMipmapTexture(GLuint& handle, glm::vec2 dimensions)
 {
 	//Generate textures with mipmap
-	if (*handle != 0)
-		glDeleteTextures(1, handle);
+	if (handle != 0)
+		glDeleteTextures(1, &handle);
 
-	glGenTextures(1, handle);
-	glBindTexture(GL_TEXTURE_2D, *handle);
+	glGenTextures(1, &handle);
+	glBindTexture(GL_TEXTURE_2D, handle);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
