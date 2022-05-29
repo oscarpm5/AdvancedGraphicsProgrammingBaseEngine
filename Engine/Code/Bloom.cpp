@@ -18,6 +18,11 @@ void Bloom::Init(App* app)
 
 
 	blurProgramIdx = LoadProgram(app, "bloom.glsl", "BLUR");
+	Program& blitBlurProgram = app->programs[blurProgramIdx];
+	uniformBlurColorTexture = glGetUniformLocation(blitBlurProgram.handle, "uColorTexture");
+	uniformDirection = glGetUniformLocation(blitBlurProgram.handle, "uDirection");
+	uniformLOD = glGetUniformLocation(blitBlurProgram.handle, "uLOD");
+
 	bloomProgramIdx = LoadProgram(app, "bloom.glsl", "BLOOM");
 
 
@@ -70,9 +75,20 @@ void Bloom::PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inp
 {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, inputTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glUniform1i(uniformColorTexture, 0);
 
 	glUniform1f(uniformThreshold, threshold);
+
+}
+
+void Bloom::PassUniformsToBlurShader(GLuint inputTexture, GLint inputLOD, const glm::vec2& direction)
+{
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, inputTexture);
+	glUniform1i(uniformBlurColorTexture, 0);
+	glUniform1i(uniformLOD, inputLOD);
+	glUniform2f(uniformDirection, direction.x, direction.y);
 
 }
 

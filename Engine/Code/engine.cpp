@@ -192,7 +192,7 @@ void Init(App* app)
 	Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
 	app->texturedMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
 
-	
+
 
 	//Texture
 	app->diceTexIdx = LoadTexture2D(app, "dice.png");
@@ -743,6 +743,43 @@ void SSAOBlurPass(App* app)
 
 void BloomPass(App* app)
 {
+#define LOD(x) x
+
+	const float w = (float)app->displaySize.x / 2.0;
+	const float h = (float)app->displaySize.y / 2.0;
+
+	const glm::vec2 horizontal = glm::vec2(1.0, 0.0);
+	const glm::vec2 vertical = glm::vec2(0.0, 1.0);
+
+	BloomPassBrightestPixels(app, glm::vec2(w, h));
+
+	glBindTexture(GL_TEXTURE_2D, app->bloomEffect.rtBright);
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	//Horizontal Blur
+	BloomPassBlur(app, &app->bloomEffect.fboBloom1, glm::vec2(w / 2.0, h / 2.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(0), horizontal);
+	//BloomPassBlur(app, &app->bloomEffect.fboBloom2, glm::vec2(w / 4.0, h / 4.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(1), horizontal);
+	//BloomPassBlur(app, &app->bloomEffect.fboBloom3, glm::vec2(w / 8.0, h / 8.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(2), horizontal);
+	//BloomPassBlur(app, &app->bloomEffect.fboBloom4, glm::vec2(w / 16.0, h / 16.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(3), horizontal);
+	//BloomPassBlur(app, &app->bloomEffect.fboBloom5, glm::vec2(w / 32.0, h / 32.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(4), horizontal);
+
+	//Vertical Blur
+	//BloomPassBlur(app, &app->bloomEffect.fboBloom1, glm::vec2(w / 2.0, h / 2.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(0), vertical);
+	//BloomPassBlur(app, &app->bloomEffect.fboBloom2, glm::vec2(w / 4.0, h / 4.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(1), vertical);
+	//BloomPassBlur(app, &app->bloomEffect.fboBloom3, glm::vec2(w / 8.0, h / 8.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(2), vertical);
+	//BloomPassBlur(app, &app->bloomEffect.fboBloom4, glm::vec2(w / 16.0, h / 16.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(3), vertical);
+	//BloomPassBlur(app, &app->bloomEffect.fboBloom5, glm::vec2(w / 32.0, h / 32.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(4), vertical);
+
+
+
+
+
+#undef LOD
+}
+
+
+void BloomPassBrightestPixels(App* app, glm::vec2 dimensions)
+{
 	glEnable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
@@ -754,11 +791,9 @@ void BloomPass(App* app)
 		GL_COLOR_ATTACHMENT0,
 	};
 
-	glm::vec2 viewport = glm::vec2((float)app->displaySize.x / 2.0, (float)app->displaySize.y / 2.0);
-
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
-	glViewport(0, 0, viewport.x, viewport.y);
+	glViewport(0, 0, dimensions.x, dimensions.y);
 
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -771,12 +806,12 @@ void BloomPass(App* app)
 	GLuint vao = FindVAO(mesh, 0, blitBrightestPixelsProgram);
 	glBindVertexArray(vao);
 
-	app->bloomEffect.PassUniformsToBrightestPixelsShader(viewport,app->gBuffer.colorAttachment3Handle,0.9f);
+	app->bloomEffect.PassUniformsToBrightestPixelsShader(dimensions, app->gBuffer.colorAttachment3Handle, 0.95f);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glBindVertexArray(0);
 	blitBrightestPixelsProgram.Release();
 
@@ -784,6 +819,34 @@ void BloomPass(App* app)
 
 
 
+}
+
+void BloomPassBlur(App* app, Framebuffer* fbo, const glm::vec2& dimensions, GLenum colorAttachment, GLuint textureHandle, GLint lod, const glm::vec2& direction)
+{
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+	fbo->Bind();
+	glDrawBuffer(colorAttachment);
+	glViewport(0, 0, dimensions.x, dimensions.y);
+
+	Program& blurProgram = app->programs[app->bloomEffect.blurProgramIdx];
+	blurProgram.Bind();
+
+
+	Mesh& mesh = app->meshes[app->screenQuad];
+
+	GLuint vao = FindVAO(mesh, 0, blurProgram);
+	glBindVertexArray(vao);
+
+	app->bloomEffect.PassUniformsToBlurShader(textureHandle,lod,direction);
+
+	Submesh& submesh = mesh.submeshes[0];
+	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+
+	glBindVertexArray(0);
+	blurProgram.Release();
 }
 
 void LightPass(App* app)

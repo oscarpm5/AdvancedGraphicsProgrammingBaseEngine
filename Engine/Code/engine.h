@@ -305,6 +305,9 @@ void SSAOPass(App* app);
 void SSAOBlurPass(App* app);
 
 void BloomPass(App* app);
+void BloomPassBrightestPixels(App* app, glm::vec2 dimensions);
+
+void BloomPassBlur(App* app, Framebuffer* fbo, const glm::vec2& dimensions, GLenum colorAttachment, GLuint textureHandle, GLint lod, const glm::vec2& direction);
 
 void LightPass(App* app);
 
