@@ -24,8 +24,9 @@ void Bloom::Init(App* app)
 	uniformLOD = glGetUniformLocation(blitBlurProgram.handle, "uLOD");
 
 	bloomProgramIdx = LoadProgram(app, "bloom.glsl", "BLOOM");
-
-
+	Program& blitBloomProgram = app->programs[bloomProgramIdx];
+	uniformBloomColorTexture = glGetUniformLocation(blitBlurProgram.handle, "uColorTexture");
+	uniformMaxLOD = glGetUniformLocation(blitBlurProgram.handle, "uMaxLOD");
 
 
 
@@ -91,6 +92,15 @@ void Bloom::PassUniformsToBlurShader(GLuint inputTexture, GLint inputLOD, const 
 	glUniform2f(uniformDirection, direction.x, direction.y);
 
 }
+
+void Bloom::PassUniformsToCombineShader(GLuint inputTexture, GLint maxLOD)
+{
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, inputTexture);
+	glUniform1i(uniformBloomColorTexture, 0);
+	glUniform1i(uniformLOD, maxLOD);
+}
+
 
 void Bloom::GenerateMipmapTexture(GLuint& handle, glm::vec2 dimensions)
 {

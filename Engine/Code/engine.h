@@ -309,6 +309,8 @@ void BloomPassBrightestPixels(App* app, glm::vec2 dimensions);
 
 void BloomPassBlur(App* app, Framebuffer* fbo, const glm::vec2& dimensions, GLenum colorAttachment, GLuint textureHandle, GLint lod, const glm::vec2& direction);
 
+void BloomPassCombine(App* app, Framebuffer* fbo, GLenum colorAttachment, GLuint textureHandle, GLint maxLOD);
+
 void LightPass(App* app);
 
 void RenderLightMeshes(App* app);

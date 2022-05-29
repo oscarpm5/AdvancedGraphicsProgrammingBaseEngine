@@ -15,6 +15,7 @@ public:
 	void Init(App* app);
 	void PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inputTexture,float threshold);
 	void PassUniformsToBlurShader(GLuint inputTexture,GLint inputLOD,const glm::vec2 & direction);
+	void PassUniformsToCombineShader(GLuint inputTexture, GLint maxLOD);
 
 private:
 	void GenerateMipmapTexture(GLuint& handle, glm::vec2 dimensions);
@@ -45,6 +46,9 @@ public:
 	GLuint uniformBlurColorTexture;
 	GLuint uniformDirection;
 	GLuint uniformLOD;
+	//Bloom
+	GLuint uniformBloomColorTexture;
+	GLuint uniformMaxLOD;
 
 
 };

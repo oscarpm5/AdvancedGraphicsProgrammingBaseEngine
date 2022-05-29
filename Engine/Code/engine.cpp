@@ -758,19 +758,20 @@ void BloomPass(App* app)
 
 	//Horizontal Blur
 	BloomPassBlur(app, &app->bloomEffect.fboBloom1, glm::vec2(w / 2.0, h / 2.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(0), horizontal);
-	//BloomPassBlur(app, &app->bloomEffect.fboBloom2, glm::vec2(w / 4.0, h / 4.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(1), horizontal);
-	//BloomPassBlur(app, &app->bloomEffect.fboBloom3, glm::vec2(w / 8.0, h / 8.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(2), horizontal);
-	//BloomPassBlur(app, &app->bloomEffect.fboBloom4, glm::vec2(w / 16.0, h / 16.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(3), horizontal);
-	//BloomPassBlur(app, &app->bloomEffect.fboBloom5, glm::vec2(w / 32.0, h / 32.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(4), horizontal);
+	BloomPassBlur(app, &app->bloomEffect.fboBloom2, glm::vec2(w / 4.0, h / 4.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(1), horizontal);
+	BloomPassBlur(app, &app->bloomEffect.fboBloom3, glm::vec2(w / 8.0, h / 8.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(2), horizontal);
+	BloomPassBlur(app, &app->bloomEffect.fboBloom4, glm::vec2(w / 16.0, h / 16.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(3), horizontal);
+	BloomPassBlur(app, &app->bloomEffect.fboBloom5, glm::vec2(w / 32.0, h / 32.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(4), horizontal);
 
 	//Vertical Blur
 	BloomPassBlur(app, &app->bloomEffect.fboBloom1, glm::vec2(w / 2.0, h / 2.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(0), vertical);
-	//BloomPassBlur(app, &app->bloomEffect.fboBloom2, glm::vec2(w / 4.0, h / 4.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(1), vertical);
-	//BloomPassBlur(app, &app->bloomEffect.fboBloom3, glm::vec2(w / 8.0, h / 8.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(2), vertical);
-	//BloomPassBlur(app, &app->bloomEffect.fboBloom4, glm::vec2(w / 16.0, h / 16.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(3), vertical);
-	//BloomPassBlur(app, &app->bloomEffect.fboBloom5, glm::vec2(w / 32.0, h / 32.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(4), vertical);
+	BloomPassBlur(app, &app->bloomEffect.fboBloom2, glm::vec2(w / 4.0, h / 4.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(1), vertical);
+	BloomPassBlur(app, &app->bloomEffect.fboBloom3, glm::vec2(w / 8.0, h / 8.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(2), vertical);
+	BloomPassBlur(app, &app->bloomEffect.fboBloom4, glm::vec2(w / 16.0, h / 16.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(3), vertical);
+	BloomPassBlur(app, &app->bloomEffect.fboBloom5, glm::vec2(w / 32.0, h / 32.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(4), vertical);
 
 
+	BloomPassCombine(app, &app->bloomEffect.fboBloom1, GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBright, 4);
 
 
 
@@ -831,6 +832,9 @@ void BloomPassBlur(App* app, Framebuffer* fbo, const glm::vec2& dimensions, GLen
 	glDrawBuffer(colorAttachment);
 	glViewport(0, 0, dimensions.x, dimensions.y);
 
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	Program& blurProgram = app->programs[app->bloomEffect.blurProgramIdx];
 	blurProgram.Bind();
 
@@ -840,13 +844,48 @@ void BloomPassBlur(App* app, Framebuffer* fbo, const glm::vec2& dimensions, GLen
 	GLuint vao = FindVAO(mesh, 0, blurProgram);
 	glBindVertexArray(vao);
 
-	app->bloomEffect.PassUniformsToBlurShader(textureHandle,lod,direction);
+	app->bloomEffect.PassUniformsToBlurShader(textureHandle, lod, direction);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 
 	glBindVertexArray(0);
 	blurProgram.Release();
+	fbo->Release();
+}
+
+void BloomPassCombine(App* app, Framebuffer* fbo, GLenum colorAttachment, GLuint textureHandle, GLint maxLOD)
+{
+	glEnable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE, GL_ONE);
+
+
+
+	fbo->Bind();
+	glDrawBuffer(colorAttachment);
+	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	Program& bloomProgram = app->programs[app->bloomEffect.bloomProgramIdx];
+	bloomProgram.Bind();
+
+
+	Mesh& mesh = app->meshes[app->screenQuad];
+
+	GLuint vao = FindVAO(mesh, 0, bloomProgram);
+	glBindVertexArray(vao);
+
+	app->bloomEffect.PassUniformsToCombineShader(textureHandle, maxLOD);
+
+	Submesh& submesh = mesh.submeshes[0];
+	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+
+	glBindVertexArray(0);
+	bloomProgram.Release();
 	fbo->Release();
 }
 
