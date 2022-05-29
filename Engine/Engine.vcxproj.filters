@@ -69,6 +69,9 @@
     <ClCompile Include="Code\Bloom.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Code\Program.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -126,6 +129,9 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Code\Bloom.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Program.h">
       <Filter>Engine</Filter>
     </ClInclude>
   </ItemGroup>

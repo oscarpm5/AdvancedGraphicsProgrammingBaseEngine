@@ -5,6 +5,7 @@
 #pragma once
 
 #include "platform.h"
+#include "Program.h"
 #include "gBuffer.h"
 #include "SSAO.h"
 #include "Bloom.h"
@@ -31,16 +32,9 @@ struct VertexBufferLayout
 	u8 stride;
 };
 
-struct VertexShaderAttribute
-{
-	u8 location;
-	u8 componentCount;
-};
+struct VertexShaderAttribute;
 
-struct VertexShaderLayout
-{
-	std::vector<VertexShaderAttribute> attributes;
-};
+struct VertexShaderLayout;
 
 struct Vao
 {
@@ -105,14 +99,6 @@ struct Texture
 	std::string filepath;
 };
 
-struct Program
-{
-	GLuint             handle;
-	std::string        filepath;
-	std::string        programName;
-	u64                lastWriteTimestamp; // What is this for?
-	VertexShaderLayout vertexInputLayout;
-};
 
 struct VertexV3V2
 {
@@ -288,10 +274,6 @@ struct App
 	bool renderLightMeshes;
 };
 
-GLuint CreateProgramFromSource(String programSource, const char* shaderName);
-
-u32 LoadProgram(App* app, const char* filepath, const char* programName);
-
 Image LoadImage(const char* filename);
 
 void FreeImage(Image image);
@@ -355,3 +337,6 @@ GLuint GenerateColTex2D(vec2 displaySize);
 GLuint GenerateColTex2DHighPrecision(vec2 displaySize);
 
 GLuint GenerateDepthTex2D(vec2 displaySize);
+
+
+u32 LoadProgram(App* app, const char* filepath, const char* programName);

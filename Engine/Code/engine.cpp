@@ -13,91 +13,12 @@
 
 #define BINDING(b) b
 
-GLuint CreateProgramFromSource(String programSource, const char* shaderName)
-{
-	GLchar  infoLogBuffer[1024] = {};
-	GLsizei infoLogBufferSize = sizeof(infoLogBuffer);
-	GLsizei infoLogSize;
-	GLint   success;
-
-	char versionString[] = "#version 430\n";
-	char shaderNameDefine[128];
-	sprintf(shaderNameDefine, "#define %s\n", shaderName);
-	char vertexShaderDefine[] = "#define VERTEX\n";
-	char fragmentShaderDefine[] = "#define FRAGMENT\n";
-
-	const GLchar* vertexShaderSource[] = {
-		versionString,
-		shaderNameDefine,
-		vertexShaderDefine,
-		programSource.str
-	};
-	const GLint vertexShaderLengths[] = {
-		(GLint)strlen(versionString),
-		(GLint)strlen(shaderNameDefine),
-		(GLint)strlen(vertexShaderDefine),
-		(GLint)programSource.len
-	};
-	const GLchar* fragmentShaderSource[] = {
-		versionString,
-		shaderNameDefine,
-		fragmentShaderDefine,
-		programSource.str
-	};
-	const GLint fragmentShaderLengths[] = {
-		(GLint)strlen(versionString),
-		(GLint)strlen(shaderNameDefine),
-		(GLint)strlen(fragmentShaderDefine),
-		(GLint)programSource.len
-	};
-
-	GLuint vshader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vshader, ARRAY_COUNT(vertexShaderSource), vertexShaderSource, vertexShaderLengths);
-	glCompileShader(vshader);
-	glGetShaderiv(vshader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(vshader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-		ELOG("glCompileShader() failed with vertex shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
-	}
-
-	GLuint fshader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fshader, ARRAY_COUNT(fragmentShaderSource), fragmentShaderSource, fragmentShaderLengths);
-	glCompileShader(fshader);
-	glGetShaderiv(fshader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(fshader, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-		ELOG("glCompileShader() failed with fragment shader %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
-	}
-
-	GLuint programHandle = glCreateProgram();
-	glAttachShader(programHandle, vshader);
-	glAttachShader(programHandle, fshader);
-	glLinkProgram(programHandle);
-	glGetProgramiv(programHandle, GL_LINK_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(programHandle, infoLogBufferSize, &infoLogSize, infoLogBuffer);
-		ELOG("glLinkProgram() failed with program %s\nReported message:\n%s\n", shaderName, infoLogBuffer);
-	}
-
-	glUseProgram(0);
-
-	glDetachShader(programHandle, vshader);
-	glDetachShader(programHandle, fshader);
-	glDeleteShader(vshader);
-	glDeleteShader(fshader);
-
-	return programHandle;
-}
-
 u32 LoadProgram(App* app, const char* filepath, const char* programName)
 {
 	String programSource = ReadTextFile(filepath);
 
 	Program program = {};
-	program.handle = CreateProgramFromSource(programSource, programName);
+	program.handle = program.CreateProgramFromSource(programSource, programName);
 	program.filepath = filepath;
 	program.programName = programName;
 	program.lastWriteTimestamp = GetFileLastWriteTimestamp(filepath);
@@ -489,7 +410,7 @@ void Update(App* app)
 			glDeleteProgram(program.handle);
 			String programSource = ReadTextFile(program.filepath.c_str());
 			const char* programName = program.programName.c_str();
-			program.handle = CreateProgramFromSource(programSource, programName);
+			program.handle = program.CreateProgramFromSource(programSource, programName);
 			program.lastWriteTimestamp = currentTimestamp;
 		}
 	}
@@ -699,7 +620,7 @@ void GeometryPass(App* app)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	Program& deferredgeometryProgram = app->programs[app->gBuffer.deferredGeometryProgramIdx];
-	glUseProgram(deferredgeometryProgram.handle);
+	deferredgeometryProgram.Bind();
 
 	for (int n = 0; n < app->entities.size(); ++n)
 	{
@@ -734,7 +655,7 @@ void GeometryPass(App* app)
 	}
 
 	glBindVertexArray(0);
-	glUseProgram(0);
+	deferredgeometryProgram.Release();
 	app->gBuffer.frameBuffer.Release();
 }
 
@@ -761,7 +682,7 @@ void SSAOPass(App* app)
 	//SSAO Pass
 
 	Program& postProcessSSAOProgram = app->programs[app->ssaoEffect.ssaoProgramIdx];
-	glUseProgram(postProcessSSAOProgram.handle);
+	postProcessSSAOProgram.Bind();
 
 	Mesh& mesh = app->meshes[app->screenQuad];
 
@@ -774,7 +695,7 @@ void SSAOPass(App* app)
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 
 	glBindVertexArray(0);
-	glUseProgram(0);
+	postProcessSSAOProgram.Release();
 
 	app->ssaoEffect.frameBuffer.Release();
 }
@@ -802,7 +723,7 @@ void SSAOBlurPass(App* app)
 	//SSAO Blur Pass
 
 	Program& postProcessSSAOBlurProgram = app->programs[app->ssaoEffect.blurProgramIdx];
-	glUseProgram(postProcessSSAOBlurProgram.handle);
+	postProcessSSAOBlurProgram.Bind();
 
 	Mesh& mesh = app->meshes[app->screenQuad];
 
@@ -815,7 +736,7 @@ void SSAOBlurPass(App* app)
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 
 	glBindVertexArray(0);
-	glUseProgram(0);
+	postProcessSSAOBlurProgram.Release();
 
 	app->ssaoEffect.frameBuffer.Release();
 }
@@ -843,7 +764,7 @@ void BloomPass(App* app)
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	Program& blitBrightestPixelsProgram = app->programs[app->bloomEffect.blitBrightestPixelsProgramIdx];
-	glUseProgram(blitBrightestPixelsProgram.handle);
+	blitBrightestPixelsProgram.Bind();
 
 	Mesh& mesh = app->meshes[app->screenQuad];
 
@@ -857,7 +778,7 @@ void BloomPass(App* app)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 	glBindVertexArray(0);
-	glUseProgram(0);
+	blitBrightestPixelsProgram.Release();
 
 	app->bloomEffect.fboBloom1.Release();
 
@@ -886,7 +807,7 @@ void LightPass(App* app)
 
 
 	Program& deferredlightProgram = app->programs[app->gBuffer.deferredLightProgramIdx];
-	glUseProgram(deferredlightProgram.handle);
+	deferredlightProgram.Bind();
 
 	glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalParamsSize); //Only once as is used for each object
 
@@ -912,7 +833,7 @@ void LightPass(App* app)
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 
 	glBindVertexArray(0);
-	glUseProgram(0);
+	deferredlightProgram.Release();
 
 	app->gBuffer.frameBuffer.Release();
 }
@@ -937,7 +858,7 @@ void RenderLightMeshes(App* app)
 
 
 	Program& deferredLightMeshProgram = app->programs[app->gBuffer.deferredLightMeshProgramIdx];
-	glUseProgram(deferredLightMeshProgram.handle);
+	deferredLightMeshProgram.Bind();
 
 	//Render lights
 
@@ -967,6 +888,9 @@ void RenderLightMeshes(App* app)
 		}
 	}
 
+	//TODO release Vao & programs?
+	glBindVertexArray(0);
+	deferredLightMeshProgram.Release();
 	app->gBuffer.frameBuffer.Release();
 }
 
@@ -986,7 +910,7 @@ void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth)
 
 
 	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-	glUseProgram(texturedGeometryProgram.handle);
+	texturedGeometryProgram.Bind();
 
 	Mesh& mesh = app->meshes[app->screenQuad];
 
@@ -1003,7 +927,7 @@ void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth)
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 
 	glBindVertexArray(0);
-	glUseProgram(0);
+	texturedGeometryProgram.Release();
 }
 
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)

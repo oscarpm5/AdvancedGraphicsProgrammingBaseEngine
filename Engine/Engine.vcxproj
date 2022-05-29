@@ -26,6 +26,7 @@
     <ClCompile Include="Code\FrameBuffer.cpp" />
     <ClCompile Include="Code\gBuffer.cpp" />
     <ClCompile Include="Code\platform.cpp" />
+    <ClCompile Include="Code\Program.cpp" />
     <ClCompile Include="Code\SSAO.cpp" />
     <ClCompile Include="ThirdParty\glad\include\glad\glad.c" />
     <ClCompile Include="ThirdParty\imgui-docking\imgui.cpp" />
@@ -45,6 +46,7 @@
     <ClInclude Include="Code\FrameBuffer.h" />
     <ClInclude Include="Code\gBuffer.h" />
     <ClInclude Include="Code\platform.h" />
+    <ClInclude Include="Code\Program.h" />
     <ClInclude Include="Code\SSAO.h" />
     <ClInclude Include="ThirdParty\glad\include\glad\glad.h" />
     <ClInclude Include="ThirdParty\glad\include\glad\khrplatform.h" />
