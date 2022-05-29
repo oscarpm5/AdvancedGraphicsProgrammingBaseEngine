@@ -764,7 +764,7 @@ void BloomPass(App* app)
 	//BloomPassBlur(app, &app->bloomEffect.fboBloom5, glm::vec2(w / 32.0, h / 32.0), GL_COLOR_ATTACHMENT1, app->bloomEffect.rtBright, LOD(4), horizontal);
 
 	//Vertical Blur
-	//BloomPassBlur(app, &app->bloomEffect.fboBloom1, glm::vec2(w / 2.0, h / 2.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(0), vertical);
+	BloomPassBlur(app, &app->bloomEffect.fboBloom1, glm::vec2(w / 2.0, h / 2.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(0), vertical);
 	//BloomPassBlur(app, &app->bloomEffect.fboBloom2, glm::vec2(w / 4.0, h / 4.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(1), vertical);
 	//BloomPassBlur(app, &app->bloomEffect.fboBloom3, glm::vec2(w / 8.0, h / 8.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(2), vertical);
 	//BloomPassBlur(app, &app->bloomEffect.fboBloom4, glm::vec2(w / 16.0, h / 16.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(3), vertical);
@@ -847,6 +847,7 @@ void BloomPassBlur(App* app, Framebuffer* fbo, const glm::vec2& dimensions, GLen
 
 	glBindVertexArray(0);
 	blurProgram.Release();
+	fbo->Release();
 }
 
 void LightPass(App* app)
