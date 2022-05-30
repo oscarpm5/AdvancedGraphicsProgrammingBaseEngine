@@ -63,7 +63,7 @@
     <ClCompile Include="Code\FrameBuffer.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
-    <ClCompile Include="Code\gBuffer.cpp">
+    <ClCompile Include="Code\DeferredRendering.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Code\Bloom.cpp">
@@ -125,7 +125,7 @@
     <ClInclude Include="Code\FrameBuffer.h">
       <Filter>Engine</Filter>
     </ClInclude>
-    <ClInclude Include="Code\gBuffer.h">
+    <ClInclude Include="Code\DeferredRendering.h">
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Code\Bloom.h">

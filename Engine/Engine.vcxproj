@@ -24,7 +24,7 @@
     <ClCompile Include="Code\buffer_management.cpp" />
     <ClCompile Include="Code\engine.cpp" />
     <ClCompile Include="Code\FrameBuffer.cpp" />
-    <ClCompile Include="Code\gBuffer.cpp" />
+    <ClCompile Include="Code\DeferredRendering.cpp" />
     <ClCompile Include="Code\platform.cpp" />
     <ClCompile Include="Code\Program.cpp" />
     <ClCompile Include="Code\SSAO.cpp" />
@@ -44,7 +44,7 @@
     <ClInclude Include="Code\buffer_management.h" />
     <ClInclude Include="Code\engine.h" />
     <ClInclude Include="Code\FrameBuffer.h" />
-    <ClInclude Include="Code\gBuffer.h" />
+    <ClInclude Include="Code\DeferredRendering.h" />
     <ClInclude Include="Code\platform.h" />
     <ClInclude Include="Code\Program.h" />
     <ClInclude Include="Code\SSAO.h" />

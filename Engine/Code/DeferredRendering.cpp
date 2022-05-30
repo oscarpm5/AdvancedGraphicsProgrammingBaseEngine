@@ -1,15 +1,15 @@
 #include "engine.h"
-#include "gBuffer.h"
+#include "DeferredRendering.h"
 
-GBuffer::GBuffer()
+DeferredRendering::DeferredRendering()
 {
 }
 
-GBuffer::~GBuffer()
+DeferredRendering::~DeferredRendering()
 {
 }
 
-void GBuffer::Init(App* app)
+void DeferredRendering::Init(App* app)
 {
 	deferredGeometryProgramIdx = LoadProgram(app, "deferredRendering.glsl", "GEOMETRY_PASS");
 	Program& deferredGeometryIdx = app->programs[deferredGeometryProgramIdx];
@@ -27,7 +27,7 @@ void GBuffer::Init(App* app)
 	app->gBuffer.GenerateGBuffer(app->displaySize);
 }
 
-void GBuffer::GenerateGBuffer(glm::vec2 displaySize)
+void DeferredRendering::GenerateGBuffer(glm::vec2 displaySize)
 {
 	colorAttachment0Handle = GenerateColTex2DHighPrecision(displaySize);
 	colorAttachment1Handle = GenerateColTex2DHighPrecision(displaySize);

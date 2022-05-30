@@ -5,11 +5,11 @@
 
 struct App;
 
-class GBuffer
+class DeferredRendering
 {
 public:
-	GBuffer();
-	~GBuffer();
+	DeferredRendering();
+	~DeferredRendering();
 
 	void Init(App* app);
 

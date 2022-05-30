@@ -6,7 +6,7 @@
 
 #include "platform.h"
 #include "Program.h"
-#include "gBuffer.h"
+#include "DeferredRendering.h"
 #include "SSAO.h"
 #include "Bloom.h"
 #include "assimp_model_loading.h"
@@ -265,7 +265,7 @@ struct App
 	u32 globalParamsoffset;
 	u32 globalParamsSize;
 
-	GBuffer gBuffer;
+	DeferredRendering gBuffer;
 
 	//Texture Display mode
 	u32 displayMode;
