@@ -381,6 +381,17 @@ void Gui(App* app)
 			{
 				app->entities.erase(app->entities.begin() + selected);
 			}
+
+			bool active = app->ssaoEffect.GetActive();
+			if (ImGui::Checkbox("SSAO", &active))
+			{
+				app->ssaoEffect.SetEffectActive(active);
+			}
+			active = app->bloomEffect.GetActive();
+			if (ImGui::Checkbox("Bloom", &active))
+			{
+				app->bloomEffect.SetEffectActive(active);
+			}
 		}
 
 		ImGui::End();
@@ -530,10 +541,18 @@ void Render(App* app)
 void DeferredRender(App* app)
 {
 	GeometryPass(app);
-	SSAOPass(app);
-	SSAOBlurPass(app);
+
+	if (app->ssaoEffect.GetActive())
+	{
+		SSAOPass(app);
+		SSAOBlurPass(app);
+	}
 	LightPass(app);
-	BloomPass(app);
+	if (app->bloomEffect.GetActive())
+	{
+		BloomPass(app);
+	}
+
 
 	if (app->renderLightMeshes == true)
 	{
@@ -751,7 +770,7 @@ void BloomPass(App* app)
 	const glm::vec2 horizontal = glm::vec2(1.0, 0.0);
 	const glm::vec2 vertical = glm::vec2(0.0, 1.0);
 
-	BloomPassBrightestPixels(app, glm::vec2(w/2.0, h/2.0));
+	BloomPassBrightestPixels(app, glm::vec2(w / 2.0, h / 2.0));
 
 	glBindTexture(GL_TEXTURE_2D, app->bloomEffect.rtBright);
 	glGenerateMipmap(GL_TEXTURE_2D);

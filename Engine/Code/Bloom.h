@@ -17,10 +17,16 @@ public:
 	void PassUniformsToBlurShader(GLuint inputTexture,GLint inputLOD,const glm::vec2 & direction);
 	void PassUniformsToCombineShader(GLuint inputTexture, GLint maxLOD);
 
+	void SetEffectActive(bool active);
+	bool GetActive();
+
 private:
 	void GenerateMipmapTexture(GLuint& handle, glm::vec2 dimensions);
+private:
+	bool activeEffect = true;
 
 public:
+
 
 	//Program Indices
 	u32 blitBrightestPixelsProgramIdx;

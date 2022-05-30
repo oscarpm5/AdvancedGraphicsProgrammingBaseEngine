@@ -98,7 +98,17 @@ void Bloom::PassUniformsToCombineShader(GLuint inputTexture, GLint maxLOD)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, inputTexture);
 	glUniform1i(uniformBloomColorTexture, 0);
-	glUniform1i(uniformLOD, maxLOD);
+	glUniform1i(uniformMaxLOD, maxLOD);
+}
+
+void Bloom::SetEffectActive(bool active)
+{
+	activeEffect = active;
+}
+
+bool Bloom::GetActive()
+{
+	return activeEffect;
 }
 
 

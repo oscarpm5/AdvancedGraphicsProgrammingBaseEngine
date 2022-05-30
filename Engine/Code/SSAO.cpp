@@ -153,3 +153,13 @@ void SSAO::PassUniformsToSSAOBlurShader()
 
 	glUniform1i(uniformBlurKernelHalfSize, 2);
 }
+
+void SSAO::SetEffectActive(bool active)
+{
+	activeEffect = active;
+}
+
+bool SSAO::GetActive()
+{
+	return activeEffect;
+}

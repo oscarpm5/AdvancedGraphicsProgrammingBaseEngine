@@ -21,6 +21,9 @@ public:
 	void PassUniformsToSSAOShader(GLuint gDepthTextureHandle, GLuint gNormTextureHandle, Camera& cam, App* app);
 	void PassUniformsToSSAOBlurShader();
 
+	void SetEffectActive(bool active);
+	bool GetActive();
+
 private:
 	void GenerateSSAOBuffer(glm::vec2 displaySize);
 	u32 LoadSSAOProgram(App* app);
@@ -29,8 +32,12 @@ private:
 	void GenerateSSAOKernel(unsigned int kernelSize);
 	void GenerateSSAONoise(unsigned int noiseSamplesAxis);
 
+private:
+	bool activeEffect = true;
 
 public:
+
+
 
 	Framebuffer frameBuffer;
 	GLuint ssaoTextureHandle;

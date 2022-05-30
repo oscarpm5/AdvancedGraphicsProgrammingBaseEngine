@@ -142,12 +142,13 @@ layout(location=0) out vec4 oColor;
 
 void main()
 {    
-	oColor = vec4(0.0);
-	for(int lod = 0; lod <uMaxLOD; ++lod)
+	oColor = vec4(0.0,0.0,0.0,1.0);
+	for(int lod = 0; lod < uMaxLOD; ++lod)
 	{
-		oColor+= textureLod(uColorTexture,vTexCoord,float(lod));
+		float newLOD = lod;
+		oColor.rgb += textureLod(uColorTexture,vTexCoord,newLOD).rgb;
 	}
-	oColor.a = 1.0;
+	//oColor.rgb += textureLod(uColorTexture,vTexCoord,4.0).rgb;
 }
 
 
