@@ -241,6 +241,8 @@ in vec2 vTexCoord;
 uniform sampler2D uAlbedo;
 uniform sampler2D uNormal;
 uniform sampler2D uPosition;
+uniform sampler2D uSSAO;
+uniform bool uSSAOActive;
 
 layout( binding = 0, std140) uniform GlobalParams
 {
@@ -291,7 +293,15 @@ void main()
 		
 	}
 
-	oRadiance =  vec4(albedo * lightColor,1.0);
+	if(uSSAOActive==true)
+	{
+		oRadiance =  vec4(albedo * lightColor*texture(uSSAO,vTexCoord).rgb,1.0);
+	}
+	else
+	{
+		oRadiance =  vec4(albedo * lightColor,1.0);
+	}
+
 
 
 

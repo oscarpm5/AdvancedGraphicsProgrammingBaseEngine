@@ -40,5 +40,6 @@ public:
 	GLuint deferredLighting_uAlbedo;
 	GLuint deferredLighting_uNormal;
 	GLuint deferredLighting_uPosition;
-
+	GLuint deferredLighting_uSSAO;
+	GLuint deferredLighting_uSSAOActive;
 };

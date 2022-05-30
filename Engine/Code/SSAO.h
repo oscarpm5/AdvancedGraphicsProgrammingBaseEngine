@@ -34,9 +34,9 @@ private:
 
 private:
 	bool activeEffect = true;
-
 public:
 
+	bool blurActive = true;
 
 
 	Framebuffer frameBuffer;

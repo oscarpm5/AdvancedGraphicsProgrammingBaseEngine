@@ -20,7 +20,10 @@ void DeferredRendering::Init(App* app)
 	deferredLighting_uAlbedo = glGetUniformLocation(deferredLightingIdx.handle, "uAlbedo");
 	deferredLighting_uNormal = glGetUniformLocation(deferredLightingIdx.handle, "uNormal");
 	deferredLighting_uPosition = glGetUniformLocation(deferredLightingIdx.handle, "uPosition");
+	deferredLighting_uSSAO = glGetUniformLocation(deferredLightingIdx.handle, "uSSAO");
+	deferredLighting_uSSAOActive = glGetUniformLocation(deferredLightingIdx.handle, "uSSAOActive");
 
+	
 	deferredLightMeshProgramIdx = LoadProgram(app, "deferredRendering.glsl", "LIGHT_MESH_PASS");
 	Program& deferredLightMeshIdx = app->programs[deferredLightMeshProgramIdx];
 

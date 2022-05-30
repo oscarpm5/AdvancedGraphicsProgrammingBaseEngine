@@ -921,10 +921,9 @@ void BloomPassCombine(App* app, Framebuffer* fbo, GLenum colorAttachment, GLuint
 void LightPass(App* app)
 {
 	glEnable(GL_CULL_FACE);
-	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glDisable(GL_BLEND);
 
 	//Render on this framebuffer render targets
 	app->gBuffer.frameBuffer.Bind();
@@ -936,7 +935,9 @@ void LightPass(App* app)
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-
+	
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT);
 
 	Program& deferredlightProgram = app->programs[app->gBuffer.deferredLightProgramIdx];
 	deferredlightProgram.Bind();
@@ -960,6 +961,16 @@ void LightPass(App* app)
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, app->gBuffer.colorAttachment2Handle);
 	glUniform1i(app->gBuffer.deferredLighting_uPosition, 2);
+
+	if (app->ssaoEffect.GetActive())
+	{
+		GLuint textureHandle = app->ssaoEffect.blurActive ? app->ssaoEffect.ssaoBlurTextureHandle : app->ssaoEffect.ssaoTextureHandle;
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, textureHandle);
+		glUniform1i(app->gBuffer.deferredLighting_uSSAO, 3);
+	}
+
+	glUniform1i(app->gBuffer.deferredLighting_uSSAOActive, app->ssaoEffect.GetActive() ? 1 : 0);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
