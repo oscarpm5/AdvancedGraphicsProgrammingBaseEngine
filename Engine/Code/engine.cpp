@@ -381,12 +381,33 @@ void Gui(App* app)
 			{
 				app->entities.erase(app->entities.begin() + selected);
 			}
-
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+			//SSAO
 			bool active = app->ssaoEffect.GetActive();
 			if (ImGui::Checkbox("SSAO", &active))
 			{
 				app->ssaoEffect.SetEffectActive(active);
 			}
+			if (active)
+			{
+				ImGui::Indent();
+				ImGui::Checkbox("Blur", &app->ssaoEffect.blurActive);
+				if (app->ssaoEffect.blurActive)
+				{
+					ImGui::DragInt("BlurAmmount", &app->ssaoEffect.blurSize, 1, 1,30);
+				}
+				ImGui::Spacing();
+				ImGui::DragFloat("KernelRadius", &app->ssaoEffect.radius, 0.1f, 0.0f, 100.0f);
+				ImGui::DragFloat("SSAO Bias", &app->ssaoEffect.bias, 0.1f, -app->ssaoEffect.radius, app->ssaoEffect.radius);
+
+				ImGui::Unindent();
+			}
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+			//BLOOM
 			active = app->bloomEffect.GetActive();
 			if (ImGui::Checkbox("Bloom", &active))
 			{
@@ -394,6 +415,7 @@ void Gui(App* app)
 			}
 			if (active)
 			{
+				ImGui::Indent();
 				ImGui::DragFloat("Threshold", &app->bloomEffect.threshold, 0.05, 0.0);
 
 				int arraySize = sizeof(app->bloomEffect.intensityLODs) / sizeof(app->bloomEffect.intensityLODs[0]);
@@ -403,6 +425,7 @@ void Gui(App* app)
 					sprintf(buffer, "LOD %i", i);
 					ImGui::SliderFloat(&buffer[0], &app->bloomEffect.intensityLODs[i], 0.0f, 1.0f);
 				}
+				ImGui::Unindent();
 			}
 		}
 

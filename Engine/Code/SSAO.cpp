@@ -60,6 +60,8 @@ u32 SSAO::LoadSSAOProgram(App* app)
 
 	uniformNoiseScale = glGetUniformLocation(postProcessSSAOProgram.handle, "uNoiseScale");
 	uniformViewportSize = glGetUniformLocation(postProcessSSAOProgram.handle, "uViewportSize");
+	uniformRadius = glGetUniformLocation(postProcessSSAOProgram.handle, "uRadius");
+	uniformBias = glGetUniformLocation(postProcessSSAOProgram.handle, "uBias");
 
 	return ssaoProgramIdx;
 }
@@ -143,6 +145,10 @@ void SSAO::PassUniformsToSSAOShader(GLuint gDepthTextureHandle, GLuint gNormText
 
 	glUniformMatrix4fv(uniformViewMat, 1, GL_FALSE, glm::value_ptr(cam.view));
 	glUniformMatrix4fv(uniformProjMat, 1, GL_FALSE, glm::value_ptr(cam.projection));
+
+	glUniform1f(uniformRadius, radius);
+	glUniform1f(uniformBias, bias);
+
 }
 
 void SSAO::PassUniformsToSSAOBlurShader()
@@ -151,7 +157,7 @@ void SSAO::PassUniformsToSSAOBlurShader()
 	glBindTexture(GL_TEXTURE_2D, ssaoTextureHandle);
 	glUniform1i(uniformBlurInputTexture, 0);
 
-	glUniform1i(uniformBlurKernelHalfSize, 2);
+	glUniform1i(uniformBlurKernelHalfSize, blurSize);
 }
 
 void SSAO::SetEffectActive(bool active)

@@ -55,10 +55,15 @@ public:
 	GLuint uniformProjMat;
 	GLuint uniformViewportSize;
 	GLuint uniformNoiseScale;
+	GLuint uniformRadius;
+	GLuint uniformBias;
+
 
 	GLuint noiseTextureHandle;
 	unsigned int noiseSizeAxis;
-
+	int blurSize = 2;
+	float radius=1.0f;
+	float bias=0.0f;
 	//SSAO Blur
 
 	GLuint uniformBlurInputTexture;

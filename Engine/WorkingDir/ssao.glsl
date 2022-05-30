@@ -34,6 +34,8 @@ const int MAX_KERNEL_SIZE = 64;
 uniform vec3 uKernel[MAX_KERNEL_SIZE];
 uniform vec2 uNoiseScale;
 uniform vec2 uViewportSize;
+uniform float uRadius;
+uniform float uBias;
 
 layout(location=0) out vec4 oColor;
 
@@ -97,8 +99,6 @@ vec3 ReconstructPixelPos(vec2 uv,mat4 projectionMatrixInv, vec2 v)
 
 void main()
 {
-	float radius = 1.0;//TODO get this from c++ as a uniform
-	float bias = 0.0;//TODO get this from c++ as a uniform
 
 	float occlusion = 0.0;
 
@@ -119,7 +119,7 @@ void main()
 	{
 		//get neighbour sample pos 
 		vec3 offsetView = TBN * uKernel[i];
-		vec3 samplePosView = fragPosView + offsetView*radius;
+		vec3 samplePosView = fragPosView + offsetView*uRadius;
 
 		//Transform sample to screen space to sample the neighbours texture depth
 		vec4 offset = uProjMatrix * vec4(samplePosView,1.0);//from view to clip space 
@@ -130,13 +130,12 @@ void main()
 		//sample new pos
 		vec3 samplePosNew = ReconstructPixelPos(offset.xy,invProjMat,uViewportSize);
 
-		float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPosView.z - samplePosNew.z));
-		occlusion += (samplePosNew.z >= samplePosView.z + bias ? 1.0 : 0.0)*rangeCheck;  
+		float rangeCheck = smoothstep(0.0, 1.0, uRadius / abs(fragPosView.z - samplePosNew.z));
+		occlusion += (samplePosNew.z >= samplePosView.z + uBias ? 1.0 : 0.0)*rangeCheck;  
 	}
 
 	oColor = vec4(vec3(1.0-occlusion/float(MAX_KERNEL_SIZE)),1.0);
 
-	//oColor = vec4(randomVec,1.0);	
 }
 
 

@@ -305,7 +305,6 @@ void main()
 
 
 
-	//oRadiance = albedo*normal*position;	
 }
 
 
