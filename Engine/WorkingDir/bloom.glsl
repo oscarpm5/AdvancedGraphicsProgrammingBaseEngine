@@ -145,7 +145,7 @@ void main()
 	oColor = vec4(0.0);
 	for(int lod = 0; lod <uMaxLOD; ++lod)
 	{
-		oColor+= textureLod(uColorTexture,vTexCoord,lod);
+		oColor+= textureLod(uColorTexture,vTexCoord,float(lod));
 	}
 	oColor.a = 1.0;
 }
