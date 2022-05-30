@@ -25,8 +25,8 @@ void Bloom::Init(App* app)
 
 	bloomProgramIdx = LoadProgram(app, "bloom.glsl", "BLOOM");
 	Program& blitBloomProgram = app->programs[bloomProgramIdx];
-	uniformBloomColorTexture = glGetUniformLocation(blitBlurProgram.handle, "uColorTexture");
-	uniformMaxLOD = glGetUniformLocation(blitBlurProgram.handle, "uMaxLOD");
+	uniformBloomColorTexture = glGetUniformLocation(blitBloomProgram.handle, "uColorTexture");
+	uniformMaxLOD = glGetUniformLocation(blitBloomProgram.handle, "uMaxLOD");
 
 
 

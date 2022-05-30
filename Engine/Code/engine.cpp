@@ -771,7 +771,7 @@ void BloomPass(App* app)
 	BloomPassBlur(app, &app->bloomEffect.fboBloom5, glm::vec2(w / 32.0, h / 32.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(4), vertical);
 
 
-	//BloomPassCombine(app, &app->bloomEffect.fboBloom1, GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBright, 4);
+	BloomPassCombine(app, &app->gBuffer.frameBuffer, GL_COLOR_ATTACHMENT3, app->bloomEffect.rtBright, 4);
 
 
 
@@ -832,8 +832,8 @@ void BloomPassBlur(App* app, Framebuffer* fbo, const glm::vec2& dimensions, GLen
 	glDrawBuffer(colorAttachment);
 	glViewport(0, 0, dimensions.x, dimensions.y);
 
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	//glClear(GL_COLOR_BUFFER_BIT);
 
 	Program& blurProgram = app->programs[app->bloomEffect.blurProgramIdx];
 	blurProgram.Bind();
@@ -861,14 +861,12 @@ void BloomPassCombine(App* app, Framebuffer* fbo, GLenum colorAttachment, GLuint
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
 
-
-
 	fbo->Bind();
 	glDrawBuffer(colorAttachment);
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	//glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	//glClear(GL_COLOR_BUFFER_BIT);
 
 	Program& bloomProgram = app->programs[app->bloomEffect.bloomProgramIdx];
 	bloomProgram.Bind();
