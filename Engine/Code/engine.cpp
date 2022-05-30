@@ -745,13 +745,13 @@ void BloomPass(App* app)
 {
 #define LOD(x) x
 
-	const float w = (float)app->displaySize.x / 2.0;
-	const float h = (float)app->displaySize.y / 2.0;
+	const float w = (float)app->displaySize.x;
+	const float h = (float)app->displaySize.y;
 
 	const glm::vec2 horizontal = glm::vec2(1.0, 0.0);
 	const glm::vec2 vertical = glm::vec2(0.0, 1.0);
 
-	BloomPassBrightestPixels(app, glm::vec2(w, h));
+	BloomPassBrightestPixels(app, glm::vec2(w/2.0, h/2.0));
 
 	glBindTexture(GL_TEXTURE_2D, app->bloomEffect.rtBright);
 	glGenerateMipmap(GL_TEXTURE_2D);
@@ -771,7 +771,7 @@ void BloomPass(App* app)
 	BloomPassBlur(app, &app->bloomEffect.fboBloom5, glm::vec2(w / 32.0, h / 32.0), GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBlurH, LOD(4), vertical);
 
 
-	BloomPassCombine(app, &app->bloomEffect.fboBloom1, GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBright, 4);
+	//BloomPassCombine(app, &app->bloomEffect.fboBloom1, GL_COLOR_ATTACHMENT0, app->bloomEffect.rtBright, 4);
 
 
 
