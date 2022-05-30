@@ -137,16 +137,17 @@ in vec2 vTexCoord;
 
 uniform sampler2D uColorTexture;
 uniform int uMaxLOD;
+uniform float uLODIntensity[5];
 
 layout(location=0) out vec4 oColor;
 
 void main()
 {    
 	oColor = vec4(0.0,0.0,0.0,1.0);
-	for(int lod = 0; lod < uMaxLOD; ++lod)
+	for(int lod = 0; lod <= uMaxLOD; ++lod)
 	{
 		float newLOD = lod;
-		oColor.rgb += textureLod(uColorTexture,vTexCoord,newLOD).rgb;
+		oColor.rgb += textureLod(uColorTexture,vTexCoord,newLOD).rgb * uLODIntensity[lod];
 	}
 	//oColor.rgb += textureLod(uColorTexture,vTexCoord,4.0).rgb;
 }

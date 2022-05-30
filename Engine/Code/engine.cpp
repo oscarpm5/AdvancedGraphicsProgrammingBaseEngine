@@ -392,6 +392,18 @@ void Gui(App* app)
 			{
 				app->bloomEffect.SetEffectActive(active);
 			}
+			if (active)
+			{
+				ImGui::DragFloat("Threshold", &app->bloomEffect.threshold, 0.05, 0.0);
+
+				int arraySize = sizeof(app->bloomEffect.intensityLODs) / sizeof(app->bloomEffect.intensityLODs[0]);
+				for (int i = 0; i < arraySize; ++i)
+				{
+					char buffer[50];
+					sprintf(buffer, "LOD %i", i);
+					ImGui::SliderFloat(&buffer[0], &app->bloomEffect.intensityLODs[i], 0.0f, 1.0f);
+				}
+			}
 		}
 
 		ImGui::End();
@@ -826,7 +838,7 @@ void BloomPassBrightestPixels(App* app, glm::vec2 dimensions)
 	GLuint vao = FindVAO(mesh, 0, blitBrightestPixelsProgram);
 	glBindVertexArray(vao);
 
-	app->bloomEffect.PassUniformsToBrightestPixelsShader(dimensions, app->gBuffer.colorAttachment3Handle, 0.95f);
+	app->bloomEffect.PassUniformsToBrightestPixelsShader(dimensions, app->gBuffer.colorAttachment3Handle);
 
 	Submesh& submesh = mesh.submeshes[0];
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);

@@ -10,7 +10,6 @@ void Bloom::Init(App* app)
 #define MIPMAP_BASE_LEVEL 0
 #define MIPMAP_MAX_LEVEL 4
 
-
 	blitBrightestPixelsProgramIdx = LoadProgram(app, "bloom.glsl", "BRIGHTEST_PIXELS");
 	Program& blitBrightestPixelsProgram = app->programs[blitBrightestPixelsProgramIdx];
 	uniformColorTexture = glGetUniformLocation(blitBrightestPixelsProgram.handle, "uColorTexture");
@@ -27,6 +26,7 @@ void Bloom::Init(App* app)
 	Program& blitBloomProgram = app->programs[bloomProgramIdx];
 	uniformBloomColorTexture = glGetUniformLocation(blitBloomProgram.handle, "uColorTexture");
 	uniformMaxLOD = glGetUniformLocation(blitBloomProgram.handle, "uMaxLOD");
+	uniformLODIntensity = glGetUniformLocation(blitBloomProgram.handle, "uLODIntensity");
 
 
 
@@ -72,7 +72,7 @@ void Bloom::Init(App* app)
 
 }
 
-void Bloom::PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inputTexture, float threshold)
+void Bloom::PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inputTexture)
 {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, inputTexture);
@@ -99,6 +99,7 @@ void Bloom::PassUniformsToCombineShader(GLuint inputTexture, GLint maxLOD)
 	glBindTexture(GL_TEXTURE_2D, inputTexture);
 	glUniform1i(uniformBloomColorTexture, 0);
 	glUniform1i(uniformMaxLOD, maxLOD);
+	glUniform1fv(uniformLODIntensity, 5, intensityLODs);
 }
 
 void Bloom::SetEffectActive(bool active)

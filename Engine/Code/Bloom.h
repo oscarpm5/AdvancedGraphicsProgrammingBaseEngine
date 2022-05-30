@@ -13,8 +13,8 @@ public:
 
 	Bloom();
 	void Init(App* app);
-	void PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inputTexture,float threshold);
-	void PassUniformsToBlurShader(GLuint inputTexture,GLint inputLOD,const glm::vec2 & direction);
+	void PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inputTexture);
+	void PassUniformsToBlurShader(GLuint inputTexture, GLint inputLOD, const glm::vec2& direction);
 	void PassUniformsToCombineShader(GLuint inputTexture, GLint maxLOD);
 
 	void SetEffectActive(bool active);
@@ -27,7 +27,8 @@ private:
 
 public:
 
-
+	float intensityLODs[5] = { 0.2,0.2,0.2,0.2,0.2 };
+	float threshold=0.9f;
 	//Program Indices
 	u32 blitBrightestPixelsProgramIdx;
 	u32 blurProgramIdx;
@@ -55,6 +56,7 @@ public:
 	//Bloom
 	GLuint uniformBloomColorTexture;
 	GLuint uniformMaxLOD;
+	GLuint uniformLODIntensity;
 
 
 };
