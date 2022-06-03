@@ -59,7 +59,7 @@ layout(location=0) out vec4 oColor;
 void main()
 {
 	vec3 albedo = texture(uTexture,vTexCoord).xyz;	
-	vec3 normal = vNormal;	
+	vec3 normal = normalize(vNormal);	
 	vec3 position = vPosition;	
 	
 	vec3 viewDir = normalize(uCameraPosition -position);
@@ -90,7 +90,6 @@ void main()
 
 				lightColor += l.color * attenuation *(luminance  + spec);
 			}
-
 		
 	}
 

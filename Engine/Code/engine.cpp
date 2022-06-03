@@ -250,6 +250,7 @@ void Init(App* app)
 	}
 
 	app->renderLightMeshes = true;
+	app->deferredMode = true;
 
 	app->forwardRendering.Init(app);
 	app->deferredRendering.Init(app);
@@ -294,7 +295,20 @@ void Gui(App* app)
 		ImGui::End();
 	}
 
+
+	static int current_render_mode = 1;
+	if (ImGui::Combo("Render Mode", &current_render_mode, "Forward\0Deferred\0\0"))
 	{
+		app->deferredMode = (bool)current_render_mode;
+	}
+
+
+	if (app->deferredMode)
+	{
+		ImGui::Spacing();
+		ImGui::Separator();
+		ImGui::Spacing();
+		ImGui::Indent();
 		ImGui::Checkbox("Display Light Debug Meshes", &app->renderLightMeshes);
 
 		static int current_draw_mode = 3;
@@ -302,6 +316,7 @@ void Gui(App* app)
 		{
 			app->displayMode = current_draw_mode;
 		}
+		ImGui::Unindent();
 	}
 
 	{
@@ -377,51 +392,56 @@ void Gui(App* app)
 			{
 				app->entities.erase(app->entities.begin() + selected);
 			}
-			ImGui::Spacing();
-			ImGui::Separator();
-			ImGui::Spacing();
-			//SSAO
-			bool active = app->ssaoEffect.GetActive();
-			if (ImGui::Checkbox("SSAO", &active))
+
+			if (app->deferredMode)
 			{
-				app->ssaoEffect.SetEffectActive(active);
-			}
-			if (active)
-			{
-				ImGui::Indent();
-				ImGui::Checkbox("Blur", &app->ssaoEffect.blurActive);
-				if (app->ssaoEffect.blurActive)
+
+				ImGui::Spacing();
+				ImGui::Separator();
+				ImGui::Spacing();
+				//SSAO
+				bool active = app->ssaoEffect.GetActive();
+				if (ImGui::Checkbox("SSAO", &active))
 				{
-					ImGui::DragInt("BlurAmmount", &app->ssaoEffect.blurSize, 1, 1,30);
+					app->ssaoEffect.SetEffectActive(active);
+				}
+				if (active)
+				{
+					ImGui::Indent();
+					ImGui::Checkbox("Blur", &app->ssaoEffect.blurActive);
+					if (app->ssaoEffect.blurActive)
+					{
+						ImGui::DragInt("BlurAmmount", &app->ssaoEffect.blurSize, 1, 1, 30);
+					}
+					ImGui::Spacing();
+					ImGui::DragFloat("KernelRadius", &app->ssaoEffect.radius, 0.1f, 0.0f, 100.0f);
+					ImGui::DragFloat("SSAO Bias", &app->ssaoEffect.bias, 0.1f, -app->ssaoEffect.radius, app->ssaoEffect.radius);
+
+					ImGui::Unindent();
 				}
 				ImGui::Spacing();
-				ImGui::DragFloat("KernelRadius", &app->ssaoEffect.radius, 0.1f, 0.0f, 100.0f);
-				ImGui::DragFloat("SSAO Bias", &app->ssaoEffect.bias, 0.1f, -app->ssaoEffect.radius, app->ssaoEffect.radius);
-
-				ImGui::Unindent();
-			}
-			ImGui::Spacing();
-			ImGui::Separator();
-			ImGui::Spacing();
-			//BLOOM
-			active = app->bloomEffect.GetActive();
-			if (ImGui::Checkbox("Bloom", &active))
-			{
-				app->bloomEffect.SetEffectActive(active);
-			}
-			if (active)
-			{
-				ImGui::Indent();
-				ImGui::DragFloat("Threshold", &app->bloomEffect.threshold, 0.05, 0.0);
-
-				int arraySize = sizeof(app->bloomEffect.intensityLODs) / sizeof(app->bloomEffect.intensityLODs[0]);
-				for (int i = 0; i < arraySize; ++i)
+				ImGui::Separator();
+				ImGui::Spacing();
+				//BLOOM
+				active = app->bloomEffect.GetActive();
+				if (ImGui::Checkbox("Bloom", &active))
 				{
-					char buffer[50];
-					sprintf(buffer, "LOD %i", i);
-					ImGui::SliderFloat(&buffer[0], &app->bloomEffect.intensityLODs[i], 0.0f, 1.0f);
+					app->bloomEffect.SetEffectActive(active);
 				}
-				ImGui::Unindent();
+				if (active)
+				{
+					ImGui::Indent();
+					ImGui::DragFloat("Threshold", &app->bloomEffect.threshold, 0.05, 0.0);
+
+					int arraySize = sizeof(app->bloomEffect.intensityLODs) / sizeof(app->bloomEffect.intensityLODs[0]);
+					for (int i = 0; i < arraySize; ++i)
+					{
+						char buffer[50];
+						sprintf(buffer, "LOD %i", i);
+						ImGui::SliderFloat(&buffer[0], &app->bloomEffect.intensityLODs[i], 0.0f, 1.0f);
+					}
+					ImGui::Unindent();
+				}
 			}
 		}
 
@@ -566,8 +586,10 @@ void HandleCameraMove(App* app)
 
 void Render(App* app)
 {
-	//DeferredRender(app);
-	ForwardRender(app);
+	if (app->deferredMode)
+		DeferredRender(app);
+	else
+		ForwardRender(app);
 }
 
 void ForwardRender(App* app)
@@ -618,7 +640,6 @@ void ForwardRender(App* app)
 
 
 			glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(1), app->lBuffer.handle, app->entities[n].localParamsOffset, app->entities[n].localParamsSize);
-			//glBindBufferRange(GL_UNIFORM_BUFFER, BINDING(0), app->cBuffer.handle, app->globalParamsoffset, app->globalParamsSize);
 
 
 			Submesh& submesh = mesh.submeshes[i];
@@ -1016,7 +1037,7 @@ void LightPass(App* app)
 	glDrawBuffers(ARRAY_COUNT(drawbuffers), drawbuffers);
 
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
-	
+
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 

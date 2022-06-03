@@ -273,6 +273,7 @@ struct App
 
 	//Debug
 	bool renderLightMeshes;
+	bool deferredMode;
 };
 
 Image LoadImage(const char* filename);
