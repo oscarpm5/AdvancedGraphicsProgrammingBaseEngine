@@ -23,6 +23,7 @@
     <ClCompile Include="Code\Bloom.cpp" />
     <ClCompile Include="Code\buffer_management.cpp" />
     <ClCompile Include="Code\engine.cpp" />
+    <ClCompile Include="Code\ForwardRendering.cpp" />
     <ClCompile Include="Code\FrameBuffer.cpp" />
     <ClCompile Include="Code\DeferredRendering.cpp" />
     <ClCompile Include="Code\platform.cpp" />
@@ -43,6 +44,7 @@
     <ClInclude Include="Code\Bloom.h" />
     <ClInclude Include="Code\buffer_management.h" />
     <ClInclude Include="Code\engine.h" />
+    <ClInclude Include="Code\ForwardRendering.h" />
     <ClInclude Include="Code\FrameBuffer.h" />
     <ClInclude Include="Code\DeferredRendering.h" />
     <ClInclude Include="Code\platform.h" />

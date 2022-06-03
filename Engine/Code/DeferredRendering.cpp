@@ -27,7 +27,7 @@ void DeferredRendering::Init(App* app)
 	deferredLightMeshProgramIdx = LoadProgram(app, "deferredRendering.glsl", "LIGHT_MESH_PASS");
 	Program& deferredLightMeshIdx = app->programs[deferredLightMeshProgramIdx];
 
-	app->gBuffer.GenerateGBuffer(app->displaySize);
+	app->deferredRendering.GenerateGBuffer(app->displaySize);
 }
 
 void DeferredRendering::GenerateGBuffer(glm::vec2 displaySize)

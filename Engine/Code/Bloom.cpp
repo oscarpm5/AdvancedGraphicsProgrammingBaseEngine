@@ -15,7 +15,6 @@ void Bloom::Init(App* app)
 	uniformColorTexture = glGetUniformLocation(blitBrightestPixelsProgram.handle, "uColorTexture");
 	uniformThreshold = glGetUniformLocation(blitBrightestPixelsProgram.handle, "uThreshold");
 
-
 	blurProgramIdx = LoadProgram(app, "bloom.glsl", "BLUR");
 	Program& blitBlurProgram = app->programs[blurProgramIdx];
 	uniformBlurColorTexture = glGetUniformLocation(blitBlurProgram.handle, "uColorTexture");
@@ -28,8 +27,6 @@ void Bloom::Init(App* app)
 	uniformMaxLOD = glGetUniformLocation(blitBloomProgram.handle, "uMaxLOD");
 	uniformLODIntensity = glGetUniformLocation(blitBloomProgram.handle, "uLODIntensity");
 
-
-
 	GenerateMipmapTexture(rtBright, app->displaySize);
 	GenerateMipmapTexture(rtBlurH, app->displaySize);
 
@@ -38,7 +35,6 @@ void Bloom::Init(App* app)
 	fboBloom3.Generate();
 	fboBloom4.Generate();
 	fboBloom5.Generate();
-
 
 	fboBloom1.Bind();
 	fboBloom1.AddColorAttachment(GL_COLOR_ATTACHMENT0, rtBright, 0);
@@ -65,11 +61,10 @@ void Bloom::Init(App* app)
 	fboBloom4.Release();
 
 	fboBloom5.Bind();
-	fboBloom5.AddColorAttachment(GL_COLOR_ATTACHMENT0, rtBright,4);
+	fboBloom5.AddColorAttachment(GL_COLOR_ATTACHMENT0, rtBright, 4);
 	fboBloom5.AddColorAttachment(GL_COLOR_ATTACHMENT1, rtBlurH, 4);
 	fboBloom5.CheckStatus();
 	fboBloom5.Release();
-
 }
 
 void Bloom::PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inputTexture)
@@ -80,7 +75,6 @@ void Bloom::PassUniformsToBrightestPixelsShader(glm::vec2 dimensions, GLuint inp
 	glUniform1i(uniformColorTexture, 0);
 
 	glUniform1f(uniformThreshold, threshold);
-
 }
 
 void Bloom::PassUniformsToBlurShader(GLuint inputTexture, GLint inputLOD, const glm::vec2& direction)
@@ -90,7 +84,6 @@ void Bloom::PassUniformsToBlurShader(GLuint inputTexture, GLint inputLOD, const 
 	glUniform1i(uniformBlurColorTexture, 0);
 	glUniform1i(uniformLOD, inputLOD);
 	glUniform2f(uniformDirection, direction.x, direction.y);
-
 }
 
 void Bloom::PassUniformsToCombineShader(GLuint inputTexture, GLint maxLOD)
@@ -112,7 +105,6 @@ bool Bloom::GetActive()
 	return activeEffect;
 }
 
-
 void Bloom::GenerateMipmapTexture(GLuint& handle, glm::vec2 dimensions)
 {
 	//Generate textures with mipmap
@@ -128,7 +120,6 @@ void Bloom::GenerateMipmapTexture(GLuint& handle, glm::vec2 dimensions)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, MIPMAP_BASE_LEVEL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, MIPMAP_MAX_LEVEL);
-
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, dimensions.x / 2.0, dimensions.y / 2.0, 0, GL_RGBA, GL_FLOAT, nullptr);
 	glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA16F, dimensions.x / 4.0, dimensions.y / 4.0, 0, GL_RGBA, GL_FLOAT, nullptr);

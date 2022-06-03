@@ -6,6 +6,7 @@
 
 #include "platform.h"
 #include "Program.h"
+#include "ForwardRendering.h"
 #include "DeferredRendering.h"
 #include "SSAO.h"
 #include "Bloom.h"
@@ -264,7 +265,8 @@ struct App
 	u32 globalParamsoffset;
 	u32 globalParamsSize;
 
-	DeferredRendering gBuffer;
+	ForwardRendering forwardRendering;
+	DeferredRendering deferredRendering;
 
 	//Texture Display mode
 	u32 displayMode;
@@ -292,6 +294,8 @@ void Update(App* app);
 void HandleCameraMove(App* app);
 
 void Render(App* app);
+
+void ForwardRender(App* app);
 
 void DeferredRender(App* app);
 
