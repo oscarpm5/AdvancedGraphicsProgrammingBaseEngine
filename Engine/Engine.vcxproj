@@ -63,6 +63,8 @@
   <ItemGroup>
     <None Include="WorkingDir\bloom.glsl" />
     <None Include="WorkingDir\deferredRendering.glsl" />
+    <None Include="WorkingDir\displayToScreen.glsl" />
+    <None Include="WorkingDir\forwardRendering.glsl" />
     <None Include="WorkingDir\ssao.glsl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

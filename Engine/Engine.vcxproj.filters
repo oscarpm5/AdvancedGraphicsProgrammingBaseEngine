@@ -145,5 +145,11 @@
     <None Include="WorkingDir\bloom.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="WorkingDir\forwardRendering.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\displayToScreen.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

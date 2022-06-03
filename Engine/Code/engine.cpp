@@ -183,15 +183,10 @@ void Init(App* app)
 	// - textures
 
 	//Program
-	app->texturedGeometryProgramIdx = LoadProgram(app, "deferredRendering.glsl", "TEXTURED_GEOMETRY");
-	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-	app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
-	app->programUniformIsDepth = glGetUniformLocation(texturedGeometryProgram.handle, "isDepth");
-
-	app->texturedMeshProgramIdx = LoadProgram(app, "deferredRendering.glsl", "SHOW_TEXTURED_MESH");
-	Program& texturedMeshProgram = app->programs[app->texturedMeshProgramIdx];
-	app->texturedMeshProgram_uTexture = glGetUniformLocation(texturedMeshProgram.handle, "uTexture");
-
+	app->displayToScreenProgramIdx = LoadProgram(app, "displayToScreen.glsl", "RECT_TO_SCREEN");
+	Program& displayToScreenProgram = app->programs[app->displayToScreenProgramIdx];
+	app->programUniformTexture = glGetUniformLocation(displayToScreenProgram.handle, "uTexture");
+	app->programUniformIsDepth = glGetUniformLocation(displayToScreenProgram.handle, "isDepth");
 
 
 	//Texture
@@ -1075,12 +1070,12 @@ void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth)
 	glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
 
-	Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-	texturedGeometryProgram.Bind();
+	Program& displayToScreenProgram = app->programs[app->displayToScreenProgramIdx];
+	displayToScreenProgram.Bind();
 
 	Mesh& mesh = app->meshes[app->screenQuad];
 
-	GLuint vao = FindVAO(mesh, 0, texturedGeometryProgram);
+	GLuint vao = FindVAO(mesh, 0, displayToScreenProgram);
 	glBindVertexArray(vao);
 
 	glActiveTexture(GL_TEXTURE0);
@@ -1093,7 +1088,7 @@ void RenderTextureToScreen(App* app, GLuint textureHandle, bool isDepth)
 	glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
 
 	glBindVertexArray(0);
-	texturedGeometryProgram.Release();
+	displayToScreenProgram.Release();
 }
 
 void OnGlError(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)

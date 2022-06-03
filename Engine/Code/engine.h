@@ -218,8 +218,7 @@ struct App
 	std::vector<Entity> lightEntities;
 
 	// program indices
-	u32 texturedGeometryProgramIdx;
-	u32 texturedMeshProgramIdx;
+	u32 displayToScreenProgramIdx;
 
 
 	
