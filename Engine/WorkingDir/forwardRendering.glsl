@@ -15,15 +15,6 @@ layout(location=0) in vec3 aPosition;
 layout(location=1) in vec3 aNormal;
 layout(location=2) in vec2 aTexCoord;
 
-
-
-layout( binding = 0, std140) uniform GlobalParams
-{
-	vec3 uCameraPosition;
-	unsigned int uLightCount;
-	Light uLight[16];
-};
-
 layout( binding = 1, std140) uniform LocalParams
 {
 	mat4 uWorldMatrix;
@@ -34,16 +25,15 @@ layout( binding = 1, std140) uniform LocalParams
 out vec2 vTexCoord;
 out vec3 vPosition; //In WorldSpace
 out vec3 vNormal; //In WorldSpace
-out vec3 vViewDir; //In WorldSpace
 
 void main()
 {
-	vTexCoord = aTexCoord;
 	vPosition = vec3(uWorldMatrix*vec4(aPosition,1.0));
-	vNormal = vec3(uWorldMatrix*vec4(aNormal,0.0));
-	vViewDir = uCameraPosition - vPosition;
+	vNormal = vec3(uWorldMatrix*vec4(normalize(aNormal),0.0));
+	vTexCoord = aTexCoord;
 
 	gl_Position = uWorldViewProjectionMatrix*vec4(aPosition,1.0);
+
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
@@ -52,7 +42,6 @@ void main()
 in vec2 vTexCoord;
 in vec3 vPosition;
 in vec3 vNormal;
-in vec3 vViewDir;
 
 
 
@@ -66,28 +55,47 @@ layout( binding = 0, std140) uniform GlobalParams
 };
 
 layout(location=0) out vec4 oColor;
-layout(location=1) out vec4 oNormal;
 
 void main()
 {
-	oColor = texture(uTexture,vTexCoord);
-	oNormal = vec4(vNormal,1.0);
-	//TODO this doesn't work
+	vec3 albedo = texture(uTexture,vTexCoord).xyz;	
+	vec3 normal = vNormal;	
+	vec3 position = vPosition;	
 	
-	vec3 lightColor = vec3(0.0);
+	vec3 viewDir = normalize(uCameraPosition -position);
+
+	
+	vec3 lightColor = vec3(0.0,0.0,0.0);
 	for(int i = 0; i<uLightCount; ++i)
 	{
-		Light l = uLight[i];
+		
+			Light l = uLight[i];
 
-		if(l.type==0) //if directional light
-		{
-			float luminance = dot(normalize(vNormal),normalize(l.direction));
-			lightColor += l.color * luminance;
-		}
+			vec3 reflectDir = reflect(l.direction,normal);
+			float spec = pow(max(dot(viewDir, reflectDir), 0.0), 25);
+
+
+			if(l.type==0) //if directional light
+			{
+				float luminance = max(dot(normalize(normal),normalize(-l.direction)),0.0f);
+				lightColor += l.color * (luminance + spec);
+			}
+
+			if(l.type==1)
+			{
+				float dist = length(position-l.position);
+				float attenuation = clamp(1.0/ (dist*dist),0.0,1.0);
+
+				float luminance = max(dot(normalize(normal),normalize(l.position - position)),0.0);
+
+				lightColor += l.color * attenuation *(luminance  + spec);
+			}
+
+		
 	}
 
-	oColor =  vec4(oColor.xyz * lightColor,1.0);
-	
+		
+		oColor =  vec4(albedo * lightColor,1.0);	
 }
 
 
