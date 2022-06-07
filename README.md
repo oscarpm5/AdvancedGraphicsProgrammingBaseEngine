@@ -31,10 +31,30 @@ Camera movement is performed in the directions of the camera local coordinates.
 The project supports two different pipelines: **forward** and **deferred**. The two effects implemented are avaliable for the deferred pipeline.
 The pipeline being used can be changed through the debug ImGui window when executing the release. 
 
-WHen on the deferred pipeline both techniques implemented can be activated through a checkbox in the inspector to show their properties. The techniques implemented are the following:
+This is the default look of the image without effects on the deferred pipeline:
+![alt text][Base]
+
+When on the deferred pipeline both techniques implemented can be activated through a checkbox in the inspector to show their properties. The techniques implemented are the following:
 
 ### SSAO
-![alt text][Base] ![alt text][SSAO_Noisy] ![alt text][SSAO_Blured] ![alt text][SSAO_Widget]
+
+This effect can be activated by simply checking the SSAO effect checkbox in the ImGui inspector, which appears if the rendering pipeline is the deferred pipeline.
+
+![alt text][SSAO_Widget]
+
+When active some options to configure the effect appear as seen in the image above and can be changed in real time. The kernel radius specifies how far away neighbouring samples are taken. The bias offsets the kernel samples hemisphere along the surface normal and incrementing this value can help get rid of some artifacts with very flat surfaces.
+
+When the blur checkbox is active the noisy SSAO image created by a limited ammount of samples are smoothed with a simple square blur. The size of the blur kernel can be adjusted with the blur ammount parameter that appears once the blur checkbox is checked.
+
+In the table below you can compare the results with and without blur in the SSAO effect:
+
+| SSAO with noise | SSAO blured |
+| ------------- | ------------- |
+| ![alt text][SSAO_Noisy]  | ![alt text][SSAO_Blured]  |
+
+The shader code for both the noisy SSAO and the square blur to smooth it out can be found in the [ssao.glsl](Engine/WorkingDir/ssao.glsl) file.
+
+
 ### Bloom
 ![alt text][Bloom] ![alt text][Bloom_Widget]
 
