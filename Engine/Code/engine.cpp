@@ -273,11 +273,21 @@ void Gui(App* app)
 
 	ImGui::Begin("Info");
 	ImGui::TextWrapped("FPS: %f", 1.0f / app->deltaTime);
+	ImGui::Spacing();
+	ImGui::Spacing();
 	ImGui::TextWrapped("CONTROLS:");
 	ImGui::Indent();
-	ImGui::TextWrapped("WASDQE			-> Orbit");
-	ImGui::TextWrapped("SPACE (HOLD)	-> Orbit Multiplier");
+	ImGui::TextWrapped("WASDQE			-> Move");
+	ImGui::TextWrapped("SPACE (HOLD)	-> Movement Multiplier");
+	ImGui::TextWrapped("MOUSE SCROLL WHEEL	-> Zoom on target");
+	ImGui::TextWrapped("MOUSE RIGHT BUTTON (HOLD)	-> Orbit (Move mouse)");
+	ImGui::TextWrapped("F	-> Center camera to world origin");
 	ImGui::Unindent();
+	ImGui::Spacing();
+	ImGui::Spacing();
+	ImGui::TextWrapped("If WASDQE controls do not work, check that the main viewport is the active window (click on it) instead of having the focus on the ImGui windows");
+	ImGui::Spacing();
+	ImGui::Spacing();
 	ImGui::TextWrapped("If the ROOM model or Patrick model do not show properly, check that they are included in their own folder inside the Working Directory. (E.g. WorkingDir/Patrick/Patrick.obj).");
 
 	ImGui::End();
