@@ -2,6 +2,9 @@
 This project has been done by Oscar Pérez Martín.
 
 You can view the source code at: https://github.com/oscarpm5/AdvancedGraphicsProgrammingBaseEngine
+
+**This README is only viewed as intended when being displayed in the link above or [HERE](https://github.com/oscarpm5/AdvancedGraphicsProgrammingBaseEngine/blob/main/README.md).**
+
 A release with the compiled demo with only the executable and the models for an easy plug-and-play demonstration can be found in the release section of the github repository or through this link: TODO
 
 
