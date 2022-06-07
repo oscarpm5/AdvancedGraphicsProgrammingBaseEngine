@@ -56,15 +56,44 @@ The shader code for both the noisy SSAO and the square blur to smooth it out can
 
 
 ### Bloom
-![alt text][Bloom] ![alt text][Bloom_Widget]
+
+This effect can be activated by simply checking the Bloom effect checkbox in the ImGui inspector, which appears if the rendering pipeline is the deferred pipeline.
+
+![alt text][Bloom_Widget]
+
+When active some options to configure the effect appear as seen in the image above and can be changed in real time. THe threshold parameter specifies at which brightness the pixels of the rendered image will be considered bright enough to be glowing. The 5 LOD values below the threshold are multipliers ranging between 0 and 1 and define how much will each Level Of Detail of the blur effect contribute to the final bloom image.
+
+| Base rendered image | Image with bloom applied |
+| ------------- | ------------- |
+| ![alt text][Base]  | ![alt text][Bloom]  |
+
+The shader code for both the brightest pixel extraction and the blur can be found in the [bloom.glsl](Engine/WorkingDir/bloom.glsl) file.
+
+### Overview
+
+This is the image we started with:
+
+![alt text][Base]
+
+
+This is the image with blured SSAO applied to the base image:
+
+![alt text][SSAO_Blured] 
+
+
+This is the image with Bloom applied to the base image:
+
+![alt text][Bloom]
+
+
+Enabling both the effects we end up with the final image:
 
 ![alt text][Final]
 
 
-Changing the display of the different render targets can be done through the ImGui UI.
+The shader code for the **deferred** rendering pipeline can be found in the [deferredRendering.glsl](Engine/WorkingDir/deferredRendering.glsl) file.
 
-
-
+The shader code for the **forward** rendering pipeline can be found in the [forwardRendering.glsl](Engine/WorkingDir/forwardRendering.glsl) file.
 
 [Base]: Images/Base_No_Effects.PNG "Base image with no effects"
 [SSAO_Noisy]: Images/SSAO_No_Blur.PNG "Final image with SSAO applied. The SSAO effect is noisy"
