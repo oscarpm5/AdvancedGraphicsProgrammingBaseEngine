@@ -201,7 +201,8 @@ void Init(App* app)
 
 	float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
 	app->cam = Camera(60.0f, aspectRatio, 0.1f, 1000.0f);
-	app->cam.position = vec3(5.0f, 7.5f, 10.0f);
+	app->cam.offsetDirection = glm::normalize(vec3(5.0f, 7.5f, 10.0f));
+	app->cam.zoom = 5.0f;
 	app->cam.target = vec3(0.0f, 0.0f, 0.0f);
 	app->cam.UpdateMatrices();
 
@@ -321,13 +322,13 @@ void Gui(App* app)
 
 	{
 		ImGui::Begin("Inspector");
-		float newPos[3] = { app->cam.position.x,app->cam.position.y,app->cam.position.z };
+		glm::vec3 pos = app->cam.GetCamPos();
+		float newPos[3] = { pos.x,pos.y,pos.z };
 		if (ImGui::DragFloat3("Cam Position", newPos))
 		{
-			app->cam.position.x = newPos[0];
-			app->cam.position.y = newPos[1];
-			app->cam.position.z = newPos[2];
-			app->cam.UpdateMatrices();
+			//glm::vec3 newPos = glm::vec3(newPos[0], newPos[1], newPos[2]);
+			//app->cam.target= newPos-app->cam.offsetDirection*app->cam.zoom;
+			//app->cam.UpdateMatrices();
 		}
 
 		ImGui::Separator();
@@ -483,7 +484,7 @@ void Update(App* app)
 	MapBuffer(app->cBuffer, GL_WRITE_ONLY);
 
 	app->globalParamsoffset = app->cBuffer.head;
-	PushVec3(app->cBuffer, app->cam.position);
+	PushVec3(app->cBuffer, app->cam.GetCamPos());
 	PushUInt(app->cBuffer, app->lights.size());
 
 	for (u32 i = 0; i < app->lights.size(); ++i)
@@ -537,14 +538,38 @@ void HandleCameraMove(App* app)
 	float speed = 10.0f;
 	float speedMult = 3.0f;
 
+	
+	float horizontalMove = 0.0f;
+	float verticalMove = 0.0f;
+	float forwardMove = 0.0f;
+
+	vec3 forwardVec = glm::normalize(-app->cam.offsetDirection);
+	vec3 rightVec = glm::normalize(glm::cross(forwardVec, vec3(0.0f, 1.0f, 0.0f)));
+	vec3 vericalVec = glm::normalize(glm::cross(rightVec, forwardVec));
+
 	if (app->input.keys[Key::K_SPACE] == ButtonState::BUTTON_PRESSED)
 	{
 		speed *= speedMult;
 	}
 
-	float horizontalMove = 0.0f;
-	float verticalMove = 0.0f;
-	float forwardMove = 0.0f;
+	if (app->input.mouseButtons[MouseButton::RIGHT] == ButtonState::BUTTON_PRESSED)
+	{
+		//orbit
+		glm::vec2 delta = app->input.mouseDelta;
+		f32 rotSpeed = 10;
+		glm::vec2 rot = delta * rotSpeed*app->deltaTime;
+
+
+		//glm::mat4 rotCamX = glm::rotate(glm::radians(rot.y), glm::vec3(1.0, 0.0, 0.0));
+		//glm::mat4 rotCamY = glm::rotate(glm::radians(rot.x), glm::vec3(0.0, 1.0, 0.0));
+		glm::quat rotQX =  glm::angleAxis(glm::radians(rot.y), glm::vec3(1.0, 0.0, 0.0));
+		glm::quat rotQY = glm::angleAxis(glm::radians(rot.x), glm::vec3(0.0, 1.0, 0.0));
+		glm::quat combinedRot = rotQY * rotQX;
+		app->cam.offsetDirection = combinedRot * app->cam.offsetDirection;
+
+	}
+
+
 
 	if (app->input.keys[Key::K_D] == ButtonState::BUTTON_PRESSED)
 	{
@@ -573,13 +598,27 @@ void HandleCameraMove(App* app)
 		forwardMove += -1;
 	}
 
-	vec3 forwardVec = glm::normalize(-app->cam.position);
-	vec3 rightVec = glm::normalize(glm::cross(forwardVec, vec3(0.0f, 1.0f, 0.0f)));
-	vec3 vericalVec = glm::normalize(glm::cross(rightVec, forwardVec));
 
-	app->cam.position += forwardVec * forwardMove * speed * app->deltaTime;
-	app->cam.position += vericalVec * verticalMove * speed * app->deltaTime;
-	app->cam.position += rightVec * horizontalMove * speed * app->deltaTime;
+
+	if (app->input.mouseScrollDelta.y != 0.0f)
+	{
+		float zoomLvl = glm::max(1.0f, app->cam.zoom - app->input.mouseScrollDelta.y);
+		app->cam.zoom = zoomLvl;
+	}
+	
+
+	app->cam.target += forwardVec * forwardMove * speed * app->deltaTime;
+	app->cam.target += vericalVec * verticalMove * speed * app->deltaTime;
+	app->cam.target += rightVec * horizontalMove * speed * app->deltaTime;
+
+
+
+	if (app->input.keys[Key::K_O] == ButtonState::BUTTON_PRESS)
+	{
+		app->cam.target = glm::vec3(0.0);
+	}
+
+
 
 	app->cam.UpdateMatrices();
 }
@@ -1661,7 +1700,8 @@ Camera::Camera()
 	zNear = 0.1f;
 	zFar = 1000.0f;
 
-	position = vec3(2.0f);
+	offsetDirection = vec3(1.0f, 1.0f, -1.0f);
+	zoom = 5.0f;
 	target = vec3(0.0f);
 	UpdateMatrices();
 }
@@ -1669,14 +1709,15 @@ Camera::Camera()
 Camera::Camera(float fov, float aspectRatio, float zNear, float zFar) :fov(fov), aspectRatio(aspectRatio), zNear(zNear), zFar(zFar)
 {
 	projectionMode = ProjectionMode::PERSPECTIVE;
-	position = vec3(0.0f, 0.0f, 0.0f);
-	target = vec3(0.0f, 0.0f, -1.0f);
+	offsetDirection = vec3(1.0f, 1.0f, -1.0f);
+	zoom = 5.0f;
+	target = vec3(0.0f, 0.0f, 0.0f);
 	UpdateMatrices();
 }
 
 void Camera::UpdateMatrices()
 {
-	view = glm::lookAt(position, target, vec3(0.0f, 1.0f, 0.0f));
+	view = glm::lookAt(GetCamPos(), target, vec3(0.0f, 1.0f, 0.0f));
 
 	if (projectionMode == ProjectionMode::PERSPECTIVE)
 	{
@@ -1685,6 +1726,11 @@ void Camera::UpdateMatrices()
 	}
 
 	assert("Orthogonal projection not avaliable yet!"); //TODO create orthogonal projection in the future?
+}
+
+glm::vec3 Camera::GetCamPos()
+{
+	return target + offsetDirection*zoom;
 }
 
 glm::mat4 Entity::UpdateWorldMatrix()

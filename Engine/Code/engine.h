@@ -133,7 +133,9 @@ public:
 	float aspectRatio;
 	float zNear;
 	float zFar;
-	glm::vec3 position;
+
+	float zoom;
+	glm::vec3 offsetDirection;
 	glm::vec3 target;
 	glm::mat4 projection;
 	glm::mat4 view;
@@ -142,6 +144,7 @@ public:
 	Camera();
 	Camera(float fov, float aspectRatio, float zNear, float zFar);
 	void UpdateMatrices();
+	glm::vec3 GetCamPos();
 };
 
 class Entity
