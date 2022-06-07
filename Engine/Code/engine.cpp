@@ -202,7 +202,7 @@ void Init(App* app)
 	float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
 	app->cam = Camera(60.0f, aspectRatio, 0.1f, 1000.0f);
 	app->cam.offsetDirection = glm::normalize(vec3(5.0f, 7.5f, 10.0f));
-	app->cam.zoom = 5.0f;
+	app->cam.zoom = 15.0f;
 	app->cam.target = vec3(0.0f, 0.0f, 0.0f);
 	app->cam.UpdateMatrices();
 
@@ -559,14 +559,16 @@ void HandleCameraMove(App* app)
 		f32 rotSpeed = 10;
 		glm::vec2 rot = delta * rotSpeed*app->deltaTime;
 
+	
 
-		//glm::mat4 rotCamX = glm::rotate(glm::radians(rot.y), glm::vec3(1.0, 0.0, 0.0));
-		//glm::mat4 rotCamY = glm::rotate(glm::radians(rot.x), glm::vec3(0.0, 1.0, 0.0));
-		glm::quat rotQX =  glm::angleAxis(glm::radians(rot.y), glm::vec3(1.0, 0.0, 0.0));
-		glm::quat rotQY = glm::angleAxis(glm::radians(rot.x), glm::vec3(0.0, 1.0, 0.0));
-		glm::quat combinedRot = rotQY * rotQX;
-		app->cam.offsetDirection = combinedRot * app->cam.offsetDirection;
-
+		glm::mat4 rotCamX = glm::rotate(glm::radians(-rot.y), glm::vec3(1.0, 0.0, 0.0));
+		glm::mat4 rotCamY = glm::rotate(glm::radians(-rot.x), glm::vec3(0.0, 1.0, 0.0));
+		glm::mat4 combinedRot = rotCamY * rotCamX;
+		//glm::quat rotQX =  glm::angleAxis(glm::radians(-rot.y), glm::vec3(1.0, 0.0, 0.0));
+		//glm::quat rotQY = glm::angleAxis(glm::radians(-rot.x), glm::vec3(0.0, 1.0, 0.0));
+		//glm::quat combinedRot = rotQX *rotQY;
+		//app->cam.offsetDirection = combinedRot * app->cam.offsetDirection;
+		app->cam.offsetDirection = combinedRot * glm::vec4(app->cam.offsetDirection,1.0);
 	}
 
 
@@ -613,9 +615,10 @@ void HandleCameraMove(App* app)
 
 
 
-	if (app->input.keys[Key::K_O] == ButtonState::BUTTON_PRESS)
+	if (app->input.keys[Key::K_F] == ButtonState::BUTTON_PRESS)
 	{
 		app->cam.target = glm::vec3(0.0);
+		app->cam.zoom = 15.0f;
 	}
 
 
@@ -1701,7 +1704,7 @@ Camera::Camera()
 	zFar = 1000.0f;
 
 	offsetDirection = vec3(1.0f, 1.0f, -1.0f);
-	zoom = 5.0f;
+	zoom = 15.0f;
 	target = vec3(0.0f);
 	UpdateMatrices();
 }
@@ -1710,7 +1713,7 @@ Camera::Camera(float fov, float aspectRatio, float zNear, float zFar) :fov(fov),
 {
 	projectionMode = ProjectionMode::PERSPECTIVE;
 	offsetDirection = vec3(1.0f, 1.0f, -1.0f);
-	zoom = 5.0f;
+	zoom = 15.0f;
 	target = vec3(0.0f, 0.0f, 0.0f);
 	UpdateMatrices();
 }
