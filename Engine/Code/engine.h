@@ -135,6 +135,8 @@ public:
 	float zFar;
 
 	float zoom;
+	float pitch;
+	float yaw;
 	glm::vec3 offsetDirection;
 	glm::vec3 target;
 	glm::mat4 projection;
@@ -144,6 +146,7 @@ public:
 	Camera();
 	Camera(float fov, float aspectRatio, float zNear, float zFar);
 	void UpdateMatrices();
+	void CamUpdateRotation();
 	glm::vec3 GetCamPos();
 };
 

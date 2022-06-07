@@ -202,8 +202,11 @@ void Init(App* app)
 	float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
 	app->cam = Camera(60.0f, aspectRatio, 0.1f, 1000.0f);
 	app->cam.offsetDirection = glm::normalize(vec3(5.0f, 7.5f, 10.0f));
+	app->cam.yaw = 45.0f;
+	app->cam.pitch = -30.0f;
 	app->cam.zoom = 15.0f;
 	app->cam.target = vec3(0.0f, 0.0f, 0.0f);
+	app->cam.CamUpdateRotation();
 	app->cam.UpdateMatrices();
 
 	CreateSphere(app);
@@ -323,13 +326,14 @@ void Gui(App* app)
 	{
 		ImGui::Begin("Inspector");
 		glm::vec3 pos = app->cam.GetCamPos();
-		float newPos[3] = { pos.x,pos.y,pos.z };
+		ImGui::Text("Camera Position: %f(X), %f(Y),%f(Z)", pos.x, pos.y, pos.z);
+		/*float newPos[3] = { pos.x,pos.y,pos.z };
 		if (ImGui::DragFloat3("Cam Position", newPos))
 		{
-			//glm::vec3 newPos = glm::vec3(newPos[0], newPos[1], newPos[2]);
-			//app->cam.target= newPos-app->cam.offsetDirection*app->cam.zoom;
-			//app->cam.UpdateMatrices();
-		}
+			glm::vec3 newPos = glm::vec3(newPos[0], newPos[1], newPos[2]);
+			app->cam.target= newPos-app->cam.offsetDirection*app->cam.zoom;
+			app->cam.UpdateMatrices();
+		}*/
 
 		ImGui::Separator();
 		if (ImGui::Button("Add Patrick"))
@@ -546,7 +550,7 @@ void HandleCameraMove(App* app)
 	vec3 forwardVec = glm::normalize(-app->cam.offsetDirection);
 	vec3 rightVec = glm::normalize(glm::cross(forwardVec, vec3(0.0f, 1.0f, 0.0f)));
 	vec3 vericalVec = glm::normalize(glm::cross(rightVec, forwardVec));
-
+	
 	if (app->input.keys[Key::K_SPACE] == ButtonState::BUTTON_PRESSED)
 	{
 		speed *= speedMult;
@@ -554,21 +558,15 @@ void HandleCameraMove(App* app)
 
 	if (app->input.mouseButtons[MouseButton::RIGHT] == ButtonState::BUTTON_PRESSED)
 	{
+		
 		//orbit
 		glm::vec2 delta = app->input.mouseDelta;
-		f32 rotSpeed = 10;
+		f32 rotSpeed = 12;
 		glm::vec2 rot = delta * rotSpeed*app->deltaTime;
+		app->cam.pitch += -rot.y;
+		app->cam.yaw += -rot.x;	
 
-	
-
-		glm::mat4 rotCamX = glm::rotate(glm::radians(-rot.y), glm::vec3(1.0, 0.0, 0.0));
-		glm::mat4 rotCamY = glm::rotate(glm::radians(-rot.x), glm::vec3(0.0, 1.0, 0.0));
-		glm::mat4 combinedRot = rotCamY * rotCamX;
-		//glm::quat rotQX =  glm::angleAxis(glm::radians(-rot.y), glm::vec3(1.0, 0.0, 0.0));
-		//glm::quat rotQY = glm::angleAxis(glm::radians(-rot.x), glm::vec3(0.0, 1.0, 0.0));
-		//glm::quat combinedRot = rotQX *rotQY;
-		//app->cam.offsetDirection = combinedRot * app->cam.offsetDirection;
-		app->cam.offsetDirection = combinedRot * glm::vec4(app->cam.offsetDirection,1.0);
+		app->cam.CamUpdateRotation();
 	}
 
 
@@ -624,6 +622,20 @@ void HandleCameraMove(App* app)
 
 
 	app->cam.UpdateMatrices();
+}
+
+void Camera::CamUpdateRotation()
+{
+	pitch = glm::max(-89.9f, glm::min(89.9f, pitch));
+
+	glm::mat4 rotCamP = glm::rotate(glm::radians(pitch), glm::vec3(1.0, 0.0, 0.0));
+	glm::mat4 rotCamY = glm::rotate(glm::radians(yaw), glm::vec3(0.0, 1.0, 0.0));
+	glm::mat4 combinedRot = rotCamY * rotCamP;
+	//glm::quat rotQX =  glm::angleAxis(glm::radians(-rot.y), glm::vec3(1.0, 0.0, 0.0));
+	//glm::quat rotQY = glm::angleAxis(glm::radians(-rot.x), glm::vec3(0.0, 1.0, 0.0));
+	//glm::quat combinedRot = rotQX *rotQY;
+	//app->cam.offsetDirection = combinedRot * app->cam.offsetDirection;
+	offsetDirection = combinedRot * glm::vec4(0.0, 0.0, 1.0, 1.0);
 }
 
 void Render(App* app)
@@ -1703,6 +1715,7 @@ Camera::Camera()
 	zNear = 0.1f;
 	zFar = 1000.0f;
 
+	pitch = yaw = 0.0f;
 	offsetDirection = vec3(1.0f, 1.0f, -1.0f);
 	zoom = 15.0f;
 	target = vec3(0.0f);
@@ -1714,6 +1727,7 @@ Camera::Camera(float fov, float aspectRatio, float zNear, float zFar) :fov(fov),
 	projectionMode = ProjectionMode::PERSPECTIVE;
 	offsetDirection = vec3(1.0f, 1.0f, -1.0f);
 	zoom = 15.0f;
+	pitch = yaw = 0.0f;
 	target = vec3(0.0f, 0.0f, 0.0f);
 	UpdateMatrices();
 }
