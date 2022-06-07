@@ -1,5 +1,5 @@
 # Oscar Perez Assignment 3 Advanced Graphics Programming
-This project has been done by Oscar Pérez Martín.
+This project has been done by Oscar Perez Martin.
 
 You can view the source code at: https://github.com/oscarpm5/AdvancedGraphicsProgrammingBaseEngine
 
