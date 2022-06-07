@@ -34,9 +34,24 @@ The pipeline being used can be changed through the debug ImGui window when execu
 WHen on the deferred pipeline both techniques implemented can be activated through a checkbox in the inspector to show their properties. The techniques implemented are the following:
 
 ### SSAO
-
+![alt text][Base] ![alt text][SSAO_Noisy] ![alt text][SSAO_Blured] ![alt text][SSAO_Widget]
 ### Bloom
+![alt text][Bloom] ![alt text][Bloom_Widget]
 
+![alt text][Final]
 
 
 Changing the display of the different render targets can be done through the ImGui UI.
+
+
+
+
+[Base]: Images/Base_No_Effects.PNG "Base image with no effects"
+[SSAO_Noisy]: Images/SSAO_No_Blur.PNG "Final image with SSAO applied. The SSAO effect is noisy"
+[SSAO_Blured]: Images/SSAO_Blurred.PNG "Final image with SSAO with blur applied"
+[SSAO_Widget]: Images/SSAO_Widget.PNG "SSAO parameters customizable through the editor"
+[Bloom]: Images/Bloom.PNG "Bloom effect applied in the final image"
+[Bloom_Widget]: Images/Bloom_Widget.PNG "Bloom parameters customizable through the editor"
+[Final]: Images/All_Effects.PNG "Final image with both SSAO blured and Bloom applied"
+
+
